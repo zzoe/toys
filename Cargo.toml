@@ -1,0 +1,12 @@
+[package]
+name = "toys"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+eframe = { version = "*", features = ["persistence"] }
+exam_builder = { git = "https://gitee.com/zzoe/exam_builder.git", branch = "master" }
+serde = "*"
+rfd = "*"
