@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 eframe = { version = "*", features = ["persistence"] }
+egui_extras = { version = "*", features = ["svg"] }
 exam_builder = { git = "https://gitee.com/zzoe/exam_builder.git", branch = "master" }
 serde = "*"
 rfd = "*"
