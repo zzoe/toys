@@ -9,7 +9,26 @@ pub struct App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
-        self.toy.view(ctx);
+        egui::TopBottomPanel::top("top_panel")
+            .resizable(false)
+            // .min_height(32.0)
+            .show(ctx, |ui| {
+                self.toy.header.view(ui);
+            });
+
+        if self.toy.header.menu_switch {
+            egui::SidePanel::left("left_panel")
+                .resizable(true)
+                .default_width(150.0)
+                .width_range(80.0..=200.0)
+                .show(ctx, |ui| {
+                    self.toy.menu.view(ui);
+                });
+        }
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            self.toy.exam_builder.view(ui);
+        });
     }
 
     fn save(&mut self, storage: &mut dyn Storage) {
@@ -26,12 +45,6 @@ impl App {
         cc.storage
             .and_then(|storage| eframe::get_value::<Self>(storage, eframe::APP_KEY))
             .unwrap_or_default()
-            .init()
-    }
-
-    fn init(mut self) -> Self {
-        self.toy.init();
-        self
     }
 }
 

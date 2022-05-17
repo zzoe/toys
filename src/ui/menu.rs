@@ -1,4 +1,5 @@
 use eframe::egui;
+use eframe::egui::{Label, Sense, Ui};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -17,18 +18,26 @@ impl Default for Menu {
 }
 
 impl Menu {
-    pub fn view(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::left("left_panel")
-            .resizable(true)
-            .default_width(150.0)
-            .width_range(80.0..=200.0)
-            .show(ctx, |ui| {
-                ui.vertical(|ui| {
-                    ui.add_space(10.0);
-                    ui.add(egui::TextEdit::singleline(&mut self.search).hint_text("搜索"));
-                    if ui.button("🏡 主页").clicked() {}
-                    ui.separator();
-                });
-            });
+    pub fn view(&mut self, ui: &mut Ui) {
+        ui.vertical(|ui| {
+            ui.spacing_mut().item_spacing = egui::vec2(0.0, 8.0);
+            ui.spacing_mut().indent_ends_with_horizontal_line = true;
+            ui.add_space(10.0);
+
+            self.add_search(ui);
+            self.add_home(ui);
+            ui.separator();
+        });
+    }
+
+    fn add_search(&mut self, ui: &mut Ui) {
+        ui.add(egui::TextEdit::singleline(&mut self.search).hint_text("搜索"));
+    }
+
+    fn add_home(&mut self, ui: &mut Ui) {
+        let label = Label::new("🏡 主页").sense(Sense::click());
+        if ui.add(label).clicked() {
+            println!("clicked");
+        }
     }
 }
