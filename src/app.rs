@@ -1,10 +1,10 @@
 use eframe::{egui, Frame, Storage};
 use serde::{Deserialize, Serialize};
-use toys::ui::ToyUI;
+use toys::ui::{header, menu, page, Toy};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct App {
-    toy: ToyUI,
+    toy: Toy,
 }
 
 impl eframe::App for App {
@@ -13,21 +13,21 @@ impl eframe::App for App {
             .resizable(false)
             // .min_height(32.0)
             .show(ctx, |ui| {
-                self.toy.header.view(ui);
+                header::view(&mut self.toy, ui);
             });
 
-        if self.toy.header.menu_switch {
+        if self.toy.menu_switch {
             egui::SidePanel::left("left_panel")
                 .resizable(true)
                 .default_width(150.0)
                 .width_range(80.0..=200.0)
                 .show(ctx, |ui| {
-                    self.toy.menu.view(ui);
+                    menu::view(&mut self.toy, ui);
                 });
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            self.toy.exam_builder.view(ui);
+            page::view(&mut self.toy, ui);
         });
     }
 

@@ -11,3 +11,4 @@ egui_extras = { version = "*", features = ["svg"] }
 exam_builder = { git = "https://gitee.com/zzoe/exam_builder.git", branch = "master" }
 serde = "*"
 rfd = "*"
+unicode_names2 = { version = "*", default-features = false }
