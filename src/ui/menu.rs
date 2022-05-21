@@ -34,7 +34,6 @@ pub fn view(toy: &mut Toy, ui: &mut Ui) {
 
         add_search(toy, ui);
         add_label!(ui, toy, "🏡 主页", 0);
-        // add_home(toy, ui);
         ui.separator();
         add_label!(ui, toy, "Font Book", 1);
         add_label!(ui, toy, "Exam Builder", 2);
