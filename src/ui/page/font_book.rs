@@ -1,42 +1,56 @@
 // copy from github.com/emilk/egui/egui_demo_lib/src/demo/font_book.rs
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
-use eframe::egui::{self, FontId};
+use eframe::egui::{
+    introspection, Button, FontFamily, FontId, Hyperlink, RichText, ScrollArea, TextEdit,
+    TextStyle, Ui,
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct FontBook {
     filter: String,
+    last_filter: String,
+    available_width: f32,
     font_id: FontId,
     #[serde(skip)]
-    named_chars: BTreeMap<egui::FontFamily, BTreeMap<char, String>>,
+    named_chars: BTreeMap<FontFamily, BTreeMap<char, String>>,
+    #[serde(skip)]
+    row_chars: Vec<Vec<(char, String)>>,
+    need_update: bool,
 }
 
 impl Default for FontBook {
     fn default() -> Self {
         Self {
             filter: Default::default(),
+            last_filter: Default::default(),
+            available_width: Default::default(),
             font_id: FontId::proportional(20.0),
             named_chars: Default::default(),
+            row_chars: vec![],
+            need_update: true,
         }
     }
 }
 
 impl FontBook {
-    pub fn view(&mut self, ui: &mut egui::Ui) {
+    pub fn view(&mut self, ui: &mut Ui) {
+        let total_chars = self
+            .named_chars
+            .get(&self.font_id.family)
+            .map(|map| map.len())
+            .unwrap_or_default();
         ui.label(format!(
             "The selected font supports {} characters.",
-            self.named_chars
-                .get(&self.font_id.family)
-                .map(|map| map.len())
-                .unwrap_or_default()
+            total_chars
         ));
 
         ui.horizontal_wrapped(|ui| {
             ui.spacing_mut().item_spacing.x = 0.0;
             ui.label("You can add more characters by installing additional fonts with ");
-            ui.add(egui::Hyperlink::from_label_and_url(
-                egui::RichText::new("Context::set_fonts").text_style(egui::TextStyle::Monospace),
+            ui.add(Hyperlink::from_label_and_url(
+                RichText::new("Context::set_fonts").text_style(TextStyle::Monospace),
                 "https://docs.rs/egui/latest/egui/struct.Context.html#method.set_fonts",
             ));
             ui.label(".");
@@ -44,54 +58,105 @@ impl FontBook {
 
         ui.separator();
 
-        egui::introspection::font_id_ui(ui, &mut self.font_id);
+        introspection::font_id_ui(ui, &mut self.font_id);
 
         ui.horizontal(|ui| {
             ui.label("Filter:");
-            ui.add(egui::TextEdit::singleline(&mut self.filter).desired_width(120.0));
+            ui.add(TextEdit::singleline(&mut self.filter).desired_width(120.0));
             self.filter = self.filter.to_lowercase();
             if ui.button("ｘ").clicked() {
                 self.filter.clear();
             }
         });
 
-        let filter = &self.filter;
+        if self.filter != self.last_filter {
+            self.last_filter = self.filter.clone();
+            self.need_update = true;
+        }
+
         let named_chars = self
             .named_chars
             .entry(self.font_id.family.clone())
-            .or_insert_with(|| available_characters(ui, self.font_id.family.clone()));
+            .or_insert_with(|| available_characters(ui, self.font_id.family.clone()))
+            .clone();
 
         ui.separator();
 
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            ui.horizontal_wrapped(|ui| {
-                ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
+        let row_height = ui.text_style_height(&TextStyle::Body);
+        let rows = self.row_chars.len();
+        if rows == 0 {
+            self.need_update = true;
+        }
 
-                for (&chr, name) in named_chars {
-                    if filter.is_empty() || name.contains(filter) || *filter == chr.to_string() {
-                        let button = egui::Button::new(
-                            egui::RichText::new(chr.to_string()).font(self.font_id.clone()),
-                        )
-                        .frame(false);
+        ScrollArea::vertical().auto_shrink([false; 2]).show_rows(
+            ui,
+            row_height,
+            rows,
+            |ui, row_range| {
+                let available_width = ui.available_width();
+                if self.available_width != available_width {
+                    self.need_update = true;
+                }
 
-                        let tooltip_ui = |ui: &mut egui::Ui| {
-                            ui.label(
-                                egui::RichText::new(chr.to_string()).font(self.font_id.clone()),
-                            );
-                            ui.label(format!("{}\nU+{:X}\n\nClick to copy", name, chr as u32));
-                        };
+                if self.need_update {
+                    self.row_chars = vec![vec![]];
+                    let mut row = 0;
+                    let mut last_row_width = 0.0;
+                    let mut total_width = 0.0;
+                    ui.horizontal(|ui| {
+                        for (chr, name) in named_chars {
+                            if !self.filter.is_empty()
+                                && !name.to_lowercase().contains(&self.filter)
+                                && !chr.to_string().contains(&self.filter)
+                            {
+                                continue;
+                            }
+                            self.font_button(ui, chr, &*name);
 
-                        if ui.add(button).on_hover_ui(tooltip_ui).clicked() {
-                            ui.output().copied_text = chr.to_string();
+                            if ui.min_size().x > last_row_width + available_width {
+                                row += 1;
+                                self.row_chars.push(vec![]);
+                                self.row_chars[row].push((chr, name.clone()));
+                                last_row_width = total_width;
+                            } else {
+                                self.row_chars[row].push((chr, name.clone()));
+                            }
+                            total_width = ui.min_size().x;
                         }
+                        self.available_width = available_width;
+                        self.need_update = false;
+                    });
+                } else {
+                    for row in row_range {
+                        ui.horizontal(|ui| {
+                            for (chr, name) in self.row_chars[row].iter() {
+                                self.font_button(ui, *chr, &*name);
+                            }
+                        });
                     }
                 }
-            });
-        });
+
+                ui.add_space(row_height / 2.0);
+            },
+        );
+    }
+
+    fn font_button(&self, ui: &mut Ui, chr: char, name: &str) {
+        let button =
+            Button::new(RichText::new(chr.to_string()).font(self.font_id.clone())).frame(false);
+
+        let tooltip_ui = |ui: &mut Ui| {
+            ui.label(RichText::new(chr.to_string()).font(self.font_id.clone()));
+            ui.label(format!("{}\nU+{:X}\n\nClick to copy", name, chr as u32));
+        };
+
+        if ui.add(button).on_hover_ui(tooltip_ui).clicked() {
+            ui.output().copied_text = chr.to_string();
+        }
     }
 }
 
-fn available_characters(ui: &egui::Ui, family: egui::FontFamily) -> BTreeMap<char, String> {
+fn available_characters(ui: &Ui, family: FontFamily) -> BTreeMap<char, String> {
     ui.fonts()
         .lock()
         .fonts
