@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::Toy;
 
 macro_rules! add_label {
-    ($ui:tt, $toy:tt, $text:tt, $index:tt) => {
+    ($ui:tt, $toy:tt, $text:tt, $index:expr) => {
         let label = Label::new($text).sense(Sense::click());
         if $ui.add(label).clicked() {
             $toy.current_page = $index;
@@ -16,12 +16,18 @@ macro_rules! add_label {
 #[derive(Serialize, Deserialize)]
 pub struct Menu {
     search: String,
+    menus: Vec<(String, usize)>,
 }
 
 impl Default for Menu {
     fn default() -> Self {
         Menu {
             search: String::new(),
+            menus: vec![
+                ("🏡 主页".to_string(), 0),
+                ("📖 Font Book".to_string(), 1),
+                ("🖹 Exam Builder".to_string(), 2),
+            ],
         }
     }
 }
@@ -34,10 +40,22 @@ pub fn view(toy: &mut Toy, ui: &mut Ui) {
 
         add_search(toy, ui);
         add_label!(ui, toy, "🏡 主页", 0);
-        // add_home(toy, ui);
         ui.separator();
-        add_label!(ui, toy, "Font Book", 1);
-        add_label!(ui, toy, "Exam Builder", 2);
+
+        toy.menu.menus[1..]
+            .iter()
+            .filter(|(label, _)| {
+                if toy.menu.search.is_empty() {
+                    true
+                } else {
+                    label
+                        .to_ascii_lowercase()
+                        .contains(&toy.menu.search.to_ascii_lowercase())
+                }
+            })
+            .for_each(|(label, page_id)| {
+                add_label!(ui, toy, label, *page_id);
+            });
     });
 }
 

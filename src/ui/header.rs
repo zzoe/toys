@@ -28,6 +28,6 @@ pub fn view(toy: &mut Toy, ui: &mut Ui) {
             }
         };
 
-        ui.heading("Expandable Upper Panel");
+        ui.heading("Toys");
     });
 }

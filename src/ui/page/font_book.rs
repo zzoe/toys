@@ -3,21 +3,19 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use eframe::egui::{
-    introspection, Button, FontFamily, FontId, Hyperlink, RichText, ScrollArea, TextEdit,
-    TextStyle, Ui,
+    Button, FontFamily, FontId, RichText, ScrollArea, TextEdit, TextStyle, Ui, WidgetText,
 };
 
 #[derive(Serialize, Deserialize)]
 pub struct FontBook {
     filter: String,
     last_filter: String,
-    available_width: f32,
-    font_id: FontId,
-    #[serde(skip)]
-    named_chars: BTreeMap<FontFamily, BTreeMap<char, String>>,
-    #[serde(skip)]
+    row_width: f32,
     row_chars: Vec<Vec<(char, String)>>,
-    need_update: bool,
+    #[serde(skip)]
+    named_chars: BTreeMap<char, String>,
+    #[serde(skip)]
+    need_calc: bool,
 }
 
 impl Default for FontBook {
@@ -25,40 +23,20 @@ impl Default for FontBook {
         Self {
             filter: Default::default(),
             last_filter: Default::default(),
-            available_width: Default::default(),
-            font_id: FontId::proportional(20.0),
+            row_width: Default::default(),
             named_chars: Default::default(),
             row_chars: vec![],
-            need_update: true,
+            need_calc: true,
         }
     }
 }
 
 impl FontBook {
     pub fn view(&mut self, ui: &mut Ui) {
-        let total_chars = self
-            .named_chars
-            .get(&self.font_id.family)
-            .map(|map| map.len())
-            .unwrap_or_default();
         ui.label(format!(
             "The selected font supports {} characters.",
-            total_chars
+            self.named_chars.len()
         ));
-
-        ui.horizontal_wrapped(|ui| {
-            ui.spacing_mut().item_spacing.x = 0.0;
-            ui.label("You can add more characters by installing additional fonts with ");
-            ui.add(Hyperlink::from_label_and_url(
-                RichText::new("Context::set_fonts").text_style(TextStyle::Monospace),
-                "https://docs.rs/egui/latest/egui/struct.Context.html#method.set_fonts",
-            ));
-            ui.label(".");
-        });
-
-        ui.separator();
-
-        introspection::font_id_ui(ui, &mut self.font_id);
 
         ui.horizontal(|ui| {
             ui.label("Filter:");
@@ -71,82 +49,84 @@ impl FontBook {
 
         if self.filter != self.last_filter {
             self.last_filter = self.filter.clone();
-            self.need_update = true;
+            self.need_calc = true;
         }
 
-        let named_chars = self
-            .named_chars
-            .entry(self.font_id.family.clone())
-            .or_insert_with(|| available_characters(ui, self.font_id.family.clone()))
-            .clone();
+        if self.named_chars.is_empty() {
+            self.named_chars = available_characters(ui);
+        }
 
         ui.separator();
 
-        let row_height = ui.text_style_height(&TextStyle::Body);
+        let row_height = ui.text_style_height(&TextStyle::Button);
         let rows = self.row_chars.len();
         if rows == 0 {
-            self.need_update = true;
+            self.need_calc = true;
         }
 
-        ScrollArea::vertical().auto_shrink([false; 2]).show_rows(
-            ui,
-            row_height,
-            rows,
-            |ui, row_range| {
-                let available_width = ui.available_width();
-                if self.available_width != available_width {
-                    self.need_update = true;
-                }
+        let mut scroll_area = ScrollArea::vertical().auto_shrink([false; 2]);
+        if self.need_calc {
+            scroll_area = scroll_area.vertical_scroll_offset(0.0);
+        }
 
-                if self.need_update {
-                    self.row_chars = vec![vec![]];
-                    let mut row = 0;
-                    let mut last_row_width = 0.0;
-                    let mut total_width = 0.0;
-                    ui.horizontal(|ui| {
-                        for (chr, name) in named_chars {
-                            if !self.filter.is_empty()
-                                && !name.to_lowercase().contains(&self.filter)
-                                && !chr.to_string().contains(&self.filter)
-                            {
-                                continue;
-                            }
-                            self.font_button(ui, chr, &*name);
+        scroll_area.show_rows(ui, row_height, rows, |ui, row_range| {
+            let available_width = ui.available_width();
+            if self.row_width != available_width {
+                self.need_calc = true;
+            }
 
-                            if ui.min_size().x > last_row_width + available_width {
-                                row += 1;
-                                self.row_chars.push(vec![]);
-                                self.row_chars[row].push((chr, name.clone()));
-                                last_row_width = total_width;
-                            } else {
-                                self.row_chars[row].push((chr, name.clone()));
-                            }
-                            total_width = ui.min_size().x;
-                        }
-                        self.available_width = available_width;
-                        self.need_update = false;
-                    });
-                } else {
-                    for row in row_range {
-                        ui.horizontal(|ui| {
-                            for (chr, name) in self.row_chars[row].iter() {
-                                self.font_button(ui, *chr, &*name);
-                            }
-                        });
+            if self.need_calc {
+                self.row_chars = vec![vec![]];
+                let mut row = 0;
+                let mut used_width = 0.0;
+
+                for (chr, name) in &self.named_chars {
+                    if !self.filter.is_empty()
+                        && !name.to_lowercase().contains(&self.filter)
+                        && !chr.to_string().contains(&self.filter)
+                    {
+                        continue;
+                    }
+
+                    let width = self.button_width(ui, RichText::new(chr.to_string()).into());
+
+                    if used_width + width > available_width {
+                        row += 1;
+                        self.row_chars.push(vec![]);
+                        self.row_chars[row].push((*chr, name.clone()));
+                        used_width = width;
+                    } else {
+                        self.row_chars[row].push((*chr, name.clone()));
+                        used_width += width;
                     }
                 }
 
-                ui.add_space(row_height / 2.0);
-            },
-        );
+                self.row_width = available_width;
+                self.need_calc = false;
+            }
+
+            for row in row_range {
+                ui.horizontal(|ui| {
+                    if let Some(row_chars) = self.row_chars.get(row) {
+                        for (chr, name) in row_chars {
+                            self.char_button(ui, *chr, &*name);
+                        }
+                    }
+                });
+            }
+        });
     }
 
-    fn font_button(&self, ui: &mut Ui, chr: char, name: &str) {
-        let button =
-            Button::new(RichText::new(chr.to_string()).font(self.font_id.clone())).frame(false);
+    fn button_width(&self, ui: &Ui, text: WidgetText) -> f32 {
+        let galley = text.into_galley(ui, Some(false), 0.0, TextStyle::Button);
+        galley.size().x + 2.0 * ui.spacing().button_padding.x + ui.spacing().item_spacing.x
+    }
+
+    fn char_button(&self, ui: &mut Ui, chr: char, name: &str) {
+        let button = Button::new(RichText::new(chr)).frame(false);
 
         let tooltip_ui = |ui: &mut Ui| {
-            ui.label(RichText::new(chr.to_string()).font(self.font_id.clone()));
+            ui.label(RichText::new(chr));
             ui.label(format!("{}\nU+{:X}\n\nClick to copy", name, chr as u32));
         };
 
@@ -156,11 +136,11 @@ impl FontBook {
     }
 }
 
-fn available_characters(ui: &Ui, family: FontFamily) -> BTreeMap<char, String> {
+fn available_characters(ui: &Ui) -> BTreeMap<char, String> {
     ui.fonts()
         .lock()
         .fonts
-        .font(&FontId::new(10.0, family)) // size is arbitrary for getting the characters
+        .font(&FontId::new(35.0, FontFamily::Monospace)) // size is arbitrary for getting the characters
         .characters()
         .iter()
         .filter(|chr| !chr.is_whitespace() && !chr.is_ascii_control())

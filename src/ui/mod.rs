@@ -1,7 +1,8 @@
+use crate::ui::page::home::Home;
 use exam_builder::ui::ExamBuilder;
 use serde::{Deserialize, Serialize};
 
-use self::page::{Page, font_book::FontBook};
+use self::page::{font_book::FontBook, Page};
 
 pub mod header;
 pub mod menu;
@@ -22,9 +23,12 @@ impl Default for Toy {
             menu: menu::Menu::default(),
             menu_switch: true,
             header: header::Header::default(),
-            pages: vec![Page::ExamBuilder(ExamBuilder::default()),Page::FontBook(FontBook::default()),Page::ExamBuilder(ExamBuilder::default())],
+            pages: vec![
+                Page::Home(Home),
+                Page::FontBook(FontBook::default()),
+                Page::ExamBuilder(ExamBuilder::default()),
+            ],
             current_page: 0,
         }
     }
 }
-
