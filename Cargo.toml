@@ -8,7 +8,16 @@ edition = "2021"
 [dependencies]
 eframe = { version = "*", features = ["persistence"] }
 egui_extras = { version = "*", features = ["svg"] }
-exam_builder = { git = "https://gitee.com/zzoe/exam_builder.git", branch = "master" }
-serde = "*"
-rfd = "*"
+anyhow = { version = "*" }
+serde = { version = "*" }
+rfd = { version = "*" }
 unicode_names2 = { version = "*", default-features = false }
+thiserror = { version = "*" }
+docx-rs = { version = "*" }
+calamine = { version = "*" }
+fastrand = { version = "*" }
+time = { version = "*" }
+rust_decimal = { version = "*" }
+rayon = { version = "*" }
+futures = { version = "*", features = ["executor", "thread-pool"] }
+async-channel = { version = "*" }

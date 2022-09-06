@@ -1,10 +1,12 @@
-// copy from github.com/emilk/egui/egui_demo_lib/src/demo/font_book.rs
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use eframe::egui::{
     Button, FontFamily, FontId, RichText, ScrollArea, TextEdit, TextStyle, Ui, WidgetText,
 };
+// copy from github.com/emilk/egui/egui_demo_lib/src/demo/font_book.rs
+use serde::{Deserialize, Serialize};
+
+use crate::app::view::View;
 
 #[derive(Serialize, Deserialize)]
 pub struct FontBook {
@@ -31,8 +33,12 @@ impl Default for FontBook {
     }
 }
 
-impl FontBook {
-    pub fn view(&mut self, ui: &mut Ui) {
+impl View for FontBook {
+    fn name(&self) -> &str {
+        "📖 字典"
+    }
+
+    fn view(&mut self, ui: &mut Ui) {
         ui.label(format!(
             "The selected font supports {} characters.",
             self.named_chars.len()
@@ -42,7 +48,7 @@ impl FontBook {
             ui.label("Filter:");
             ui.add(TextEdit::singleline(&mut self.filter).desired_width(120.0));
             self.filter = self.filter.to_lowercase();
-            if ui.button("ｘ").clicked() {
+            if ui.button("⨯").clicked() {
                 self.filter.clear();
             }
         });
@@ -116,7 +122,9 @@ impl FontBook {
             }
         });
     }
+}
 
+impl FontBook {
     fn button_width(&self, ui: &Ui, text: WidgetText) -> f32 {
         let galley = text.into_galley(ui, Some(false), 0.0, TextStyle::Button);
         galley.size().x + 2.0 * ui.spacing().button_padding.x + ui.spacing().item_spacing.x
