@@ -7,7 +7,7 @@ use crate::app::config::cal::CalConfig;
 
 pub mod cal;
 
-#[derive(Clone, Serialize, Deserialize, Default)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
 pub struct ToyConfig {
     pub cal_cfg: Rc<RefCell<CalConfig>>,
 }

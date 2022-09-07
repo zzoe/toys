@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::app::worker::{Event, Task};
 use crate::app::App;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct LogoClick {}
 
 impl Task for LogoClick {

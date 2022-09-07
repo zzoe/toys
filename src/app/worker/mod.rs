@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use async_channel::{Receiver, Sender};
@@ -15,7 +16,7 @@ pub trait Task: Send + Sync {
     fn execute(&self) -> Option<Arc<dyn Event>>;
 }
 
-pub trait Event: Send + Sync {
+pub trait Event: Send + Sync + Debug {
     fn handle(&self, app: &mut App);
 }
 
@@ -34,8 +35,8 @@ pub fn start(ctx: Context) -> (Sender<Arc<dyn Task>>, Receiver<Arc<dyn Event>>) 
             pool.spawn_ok(async move {
                 if let Some(event) = task.execute() {
                     event_s.send(event).await.ok();
+                    ctx.request_repaint();
                 }
-                ctx.request_repaint();
             });
         }
     });

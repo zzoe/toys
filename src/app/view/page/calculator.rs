@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::DerefMut;
@@ -21,6 +22,7 @@ use crate::app::worker::calculator::{
 };
 use crate::app::worker::Task;
 
+#[derive(Debug)]
 pub struct Calculator {
     sender: Sender<Arc<dyn Task>>,
     warn: Result<()>,
@@ -284,8 +286,8 @@ impl View for Calculator {
                     row.col(|ui| {
                         let mut renew_type =
                             self.cal_cfg.borrow().products[row_index].renew_type as usize;
-                        if ComboBox::from_id_source(format!("续存方式{}", row_index))
-                            .width(80.0)
+                        if ComboBox::from_id_source(format!("续存类型{}", row_index))
+                            .width(140.0)
                             .show_index(ui, &mut renew_type, 3, |i| RenewType::from(i).to_string())
                             .changed()
                         {
@@ -311,5 +313,13 @@ impl View for Calculator {
                     });
                 });
             });
+    }
+
+    fn any(&self) -> &dyn Any {
+        self
+    }
+
+    fn any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }

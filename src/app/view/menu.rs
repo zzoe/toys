@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -6,6 +7,8 @@ use async_channel::Sender;
 use eframe::egui;
 use eframe::egui::{Label, Sense, Ui};
 
+use crate::app::config::ToyConfig;
+use crate::app::view::page::calculator::Calculator;
 use crate::app::view::page::font_book::FontBook;
 use crate::app::view::page::home::Home;
 use crate::app::view::View;
@@ -23,6 +26,7 @@ macro_rules! add_label {
     };
 }
 
+#[derive(Debug)]
 pub struct Menu {
     sender: Sender<Arc<dyn Task>>,
     search: String,
@@ -30,26 +34,29 @@ pub struct Menu {
 }
 
 impl Menu {
-    pub fn new(sender: Sender<Arc<dyn Task>>) -> Self {
+    pub fn new(sender: Sender<Arc<dyn Task>>, cfg: &ToyConfig) -> Self {
+        let calculator = Rc::new(RefCell::new(Calculator::new(
+            sender.clone(),
+            Rc::clone(&cfg.cal_cfg),
+        )));
         Menu {
             search: String::new(),
             menus: vec![
                 Rc::new(RefCell::new(Home {})),
                 Rc::new(RefCell::new(FontBook::default())),
+                calculator,
             ],
             sender,
         }
     }
 
-    pub fn push(&mut self, page: Rc<RefCell<dyn View>>) {
-        self.menus.push(page)
-    }
+    // pub fn push(&mut self, page: Rc<RefCell<dyn View>>) {
+    //     self.menus.push(page)
+    // }
 
     pub fn home(&self) -> Rc<RefCell<dyn View>> {
         Rc::clone(&self.menus[0])
     }
-
-    // pub fn calculator(&self) -> Rc<RefCell<dyn>>
 
     pub fn page(&self, page_index: usize) -> Option<Rc<RefCell<dyn View>>> {
         self.menus.get(page_index).map(Rc::clone)
@@ -90,5 +97,13 @@ impl View for Menu {
                     }
                 });
         });
+    }
+
+    fn any(&self) -> &dyn Any {
+        self
+    }
+
+    fn any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }

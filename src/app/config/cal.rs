@@ -4,7 +4,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use time::{OffsetDateTime, UtcOffset};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct CalConfig {
     pub order: Order,
     pub products: Vec<Product>,
@@ -32,7 +32,7 @@ impl Default for CalConfig {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
 pub struct Order {
     pub principal: Decimal,
     pub save_date: u32,
@@ -56,7 +56,7 @@ impl Default for Order {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Default)]
+#[derive(Copy, Clone, Serialize, Deserialize, Default, Debug)]
 pub struct Product {
     pub term: u8,
     pub term_type: TermType,
@@ -86,7 +86,7 @@ impl Product {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, Debug)]
 pub enum TermType {
     D,
     M,
@@ -119,7 +119,7 @@ impl Default for TermType {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, Debug)]
 pub enum RenewType {
     N,
     P,

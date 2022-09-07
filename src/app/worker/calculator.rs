@@ -7,11 +7,12 @@ use rust_decimal::RoundingStrategy::{MidpointAwayFromZero, ToZero};
 use time::{util, Date, Duration, Month};
 
 use crate::app::config::cal::{Order, Product, RenewType, TermType};
+use crate::app::view::page::calculator::Calculator;
 use crate::app::worker::{Event, Task};
 use crate::app::App;
 
 //req 需要计算的key (本金-购买日期-支取日期-产品存期-存期类型-利率-邦豆利率-滚存类型)
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Default, Debug)]
 pub struct TentativeCalculation {
     pub principal: Decimal,
     pub save_date: u32,
@@ -39,7 +40,7 @@ impl TentativeCalculation {
 }
 
 //res 计算结果HashMap<key,value> ()
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Default, Debug)]
 pub struct TentativeInterest {
     pub interest: Decimal,
     pub bean_int: Decimal,
@@ -163,7 +164,7 @@ fn calc_interest(principal: Decimal, rate: Decimal, days: Decimal) -> Option<Dec
         .and_then(|d| d.checked_mul(principal))
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Default, Debug)]
 pub struct CalEvent {
     pub req: TentativeCalculation,
     pub res: TentativeInterest,
@@ -171,6 +172,15 @@ pub struct CalEvent {
 
 impl Event for CalEvent {
     fn handle(&self, app: &mut App) {
-        app.calculator.borrow_mut().refresh_cache(self);
+        // let mut page = app.page.borrow_mut();
+        // if let Some(calculator) = page.any_mut().downcast_mut::<Calculator>() {
+        //     calculator.refresh_cache(self);
+        // }
+
+        if let Some(view) = app.menu.page(2) {
+            if let Some(calculator) = view.borrow_mut().any_mut().downcast_mut::<Calculator>() {
+                calculator.refresh_cache(self)
+            }
+        }
     }
 }

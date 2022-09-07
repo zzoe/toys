@@ -1,3 +1,5 @@
+use std::any::Any;
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
 use async_channel::Sender;
@@ -42,5 +44,19 @@ impl View for Header {
 
             ui.heading("Toys");
         });
+    }
+
+    fn any(&self) -> &dyn Any {
+        self
+    }
+
+    fn any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+impl Debug for Header {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("sender").finish()
     }
 }

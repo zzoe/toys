@@ -11,7 +11,6 @@ use config::ToyConfig;
 
 use crate::app::view::header::Header;
 use crate::app::view::menu::Menu;
-use crate::app::view::page::calculator::Calculator;
 use crate::app::view::View;
 use crate::app::worker::Event;
 
@@ -20,19 +19,19 @@ pub mod error;
 pub mod view;
 pub mod worker;
 
+#[derive(Debug)]
 pub struct App {
     pub cfg: ToyConfig,
     pub event_receiver: Receiver<Arc<dyn Event>>,
     pub header: Header,
-    pub menu: Menu,
     pub menu_switch: bool,
+    pub menu: Menu,
     pub page: Rc<RefCell<dyn View>>,
-    pub calculator: Rc<RefCell<Calculator>>,
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
-        if let Ok(event) = self.event_receiver.try_recv() {
+        while let Ok(event) = self.event_receiver.try_recv() {
             event.handle(self);
         }
 
@@ -80,22 +79,16 @@ impl App {
 
         let (task_sender, event_receiver) = worker::start(egui_ctx);
 
-        let calculator = Rc::new(RefCell::new(Calculator::new(
-            task_sender.clone(),
-            Rc::clone(&cfg.cal_cfg),
-        )));
-        let mut menu = Menu::new(task_sender.clone());
-        menu.push(Rc::clone(&calculator) as Rc<RefCell<dyn View>>);
+        let menu = Menu::new(task_sender.clone(), &cfg);
         let page = menu.home();
 
         Self {
-            menu,
-            menu_switch: true,
-            header: Header::new(task_sender),
-            page,
             cfg,
             event_receiver,
-            calculator,
+            header: Header::new(task_sender),
+            menu_switch: true,
+            menu,
+            page,
         }
     }
 }

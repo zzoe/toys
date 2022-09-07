@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::collections::BTreeMap;
 
 use eframe::egui::{
@@ -8,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::view::View;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct FontBook {
     filter: String,
     last_filter: String,
@@ -121,6 +122,14 @@ impl View for FontBook {
                 });
             }
         });
+    }
+
+    fn any(&self) -> &dyn Any {
+        self
+    }
+
+    fn any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
