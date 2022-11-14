@@ -16,8 +16,24 @@ thiserror = { version = "*" }
 docx-rs = { version = "*" }
 calamine = { version = "*" }
 fastrand = { version = "*" }
-time = { version = "*" }
 rust_decimal = { version = "*" }
 rayon = { version = "*" }
 futures = { version = "*", features = ["executor", "thread-pool"] }
 async-channel = { version = "*" }
+
+# native:
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+time = { version = "*" }
+#tracing-subscriber = "0.3"
+
+# web:
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "*"
+time = { version = "*", features = ["wasm-bindgen"] }
+console_error_panic_hook = "*"
+tracing-wasm = "*"
+
+[profile.release]
+opt-level = 2 # fast and small wasm
+
+[patch.crates-io]

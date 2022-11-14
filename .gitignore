@@ -4,6 +4,7 @@
 resource/
 debug/
 target/
+dist/
 .idea
 .vscode
 *.iml
