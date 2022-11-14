@@ -1,11 +1,10 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use async_channel::{Receiver, Sender};
 use eframe::egui::Context;
-use futures::executor::ThreadPoolBuilder;
+use futures::executor::ThreadPool;
 
-use crate::app::App;
+use crate::app::{App, Channel};
 
 pub mod calculator;
 pub mod header;
@@ -20,10 +19,10 @@ pub trait Event: Send + Sync + Debug {
     fn handle(&self, app: &mut App);
 }
 
-pub fn start(ctx: Context) -> (Sender<Arc<dyn Task>>, Receiver<Arc<dyn Event>>) {
-    let worker = ThreadPoolBuilder::new().create().unwrap();
-    let (task_s, task_r) = async_channel::unbounded::<Arc<dyn Task>>();
-    let (event_s, event_r) = async_channel::unbounded::<Arc<dyn Event>>();
+pub fn start(ctx: Context) -> Channel {
+    let worker = ThreadPool::new().unwrap();
+    let (task_sender, task_r) = async_channel::unbounded::<Arc<dyn Task>>();
+    let (event_s, event_receiver) = async_channel::unbounded::<Arc<dyn Event>>();
 
     let pool = worker.clone();
     worker.spawn_ok(async move {
@@ -41,5 +40,8 @@ pub fn start(ctx: Context) -> (Sender<Arc<dyn Task>>, Receiver<Arc<dyn Event>>) 
         }
     });
 
-    (task_s, event_r)
+    Channel {
+        task_sender,
+        event_receiver,
+    }
 }

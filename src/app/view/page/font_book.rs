@@ -116,7 +116,7 @@ impl View for FontBook {
                 ui.horizontal(|ui| {
                     if let Some(row_chars) = self.row_chars.get(row) {
                         for (chr, name) in row_chars {
-                            self.char_button(ui, *chr, &*name);
+                            self.char_button(ui, *chr, &**name);
                         }
                     }
                 });

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use async_channel::Receiver;
+use async_channel::{Receiver, Sender};
 use eframe::egui::{Align, FontFamily, Layout, TextStyle};
 use eframe::epaint::FontId;
 use eframe::{egui, Frame, Storage};
@@ -12,12 +12,17 @@ use config::ToyConfig;
 use crate::app::view::header::Header;
 use crate::app::view::menu::Menu;
 use crate::app::view::View;
-use crate::app::worker::Event;
+use crate::app::worker::{Event, Task};
 
 pub mod config;
 pub mod error;
 pub mod view;
 pub mod worker;
+
+pub struct Channel {
+    task_sender: Sender<Arc<dyn Task>>,
+    event_receiver: Receiver<Arc<dyn Event>>,
+}
 
 #[derive(Debug)]
 pub struct App {
@@ -77,7 +82,10 @@ impl App {
             .and_then(|storage| eframe::get_value::<ToyConfig>(storage, eframe::APP_KEY))
             .unwrap_or_default();
 
-        let (task_sender, event_receiver) = worker::start(egui_ctx);
+        let Channel {
+            task_sender,
+            event_receiver,
+        } = worker::start(egui_ctx);
 
         let menu = Menu::new(task_sender.clone(), &cfg);
         let page = menu.home();
