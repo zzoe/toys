@@ -108,8 +108,10 @@ fn setup_custom_fonts(ctx: &egui::Context) {
     // Install my own font (maybe supporting non-latin characters).
     // .ttf and .otf files supported.
     fonts.font_data.insert(
-        "consola".to_owned(),
-        egui::FontData::from_static(include_bytes!("../../resource/consola.ttf")),
+        "jetbrains".to_owned(),
+        egui::FontData::from_static(include_bytes!(
+            "../../resource/JetBrainsMonoNLNerdFontMono-Regular.ttf"
+        )),
     );
     fonts.font_data.insert(
         "simkai".to_owned(),
@@ -117,11 +119,11 @@ fn setup_custom_fonts(ctx: &egui::Context) {
     );
 
     let entry = fonts.families.entry(FontFamily::Proportional).or_default();
-    entry.push("consola".to_owned());
+    entry.push("jetbrains".to_owned());
     entry.push("simkai".to_owned());
 
     let entry = fonts.families.entry(FontFamily::Monospace).or_default();
-    entry.push("consola".to_owned());
+    entry.push("jetbrains".to_owned());
     entry.push("simkai".to_owned());
 
     // Tell egui to use these fonts:

@@ -10,7 +10,7 @@ use async_channel::Sender;
 use eframe::egui;
 use eframe::egui::Ui;
 use eframe::egui::{Align, Color32, ComboBox, Layout, RichText, TextEdit, Widget};
-use egui_extras::{Size, TableBuilder};
+use egui_extras::{Column, TableBuilder};
 use rayon::prelude::*;
 use rust_decimal::Decimal;
 use rust_decimal::RoundingStrategy::ToZero;
@@ -165,16 +165,16 @@ impl View for Calculator {
 
         TableBuilder::new(ui)
             .cell_layout(Layout::left_to_right(Align::Center))
-            .column(Size::remainder())
-            .column(Size::remainder())
-            .column(Size::remainder())
-            .column(Size::remainder())
+            .column(Column::remainder())
+            .column(Column::remainder())
+            .column(Column::remainder())
+            .column(Column::remainder())
             .header(text_height, |mut header| {
                 header.col(|ui| {
                     ui.heading("本金");
                     let mut principal = format!("{:.2}", self.cal_cfg.borrow().order.principal);
                     if ui.text_edit_singleline(&mut principal).changed() {
-                        self.principal_changed(&*principal);
+                        self.principal_changed(&principal);
                     };
                 });
 
@@ -183,7 +183,7 @@ impl View for Calculator {
                     let mut save_date = self.cal_cfg.borrow().order.save_date.to_string();
                     if ui.text_edit_singleline(&mut save_date).changed() {
                         save_date.truncate(8);
-                        self.save_date_changed(&*save_date);
+                        self.save_date_changed(&save_date);
                     }
                 });
 
@@ -192,7 +192,7 @@ impl View for Calculator {
                     let mut draw_date = self.cal_cfg.borrow().order.draw_date.to_string();
                     if ui.text_edit_singleline(&mut draw_date).changed() {
                         draw_date.truncate(8);
-                        self.draw_date_changed(&*draw_date);
+                        self.draw_date_changed(&draw_date);
                     }
                 });
 
@@ -207,13 +207,13 @@ impl View for Calculator {
         TableBuilder::new(ui)
             .striped(true)
             .cell_layout(Layout::left_to_right(Align::Center))
-            .column(Size::initial(100.0))
-            .column(Size::remainder())
-            .column(Size::remainder())
-            .column(Size::initial(150.0))
-            .column(Size::remainder())
-            .column(Size::remainder())
-            .column(Size::initial(50.0))
+            .column(Column::initial(100.0))
+            .column(Column::remainder())
+            .column(Column::remainder())
+            .column(Column::initial(150.0))
+            .column(Column::remainder())
+            .column(Column::remainder())
+            .column(Column::initial(50.0))
             .header(text_height, |mut header| {
                 header.col(|ui| {
                     ui.heading("存期");
@@ -253,7 +253,7 @@ impl View for Calculator {
                                 .ui(ui)
                                 .changed()
                             {
-                                self.term_changed(&*term, row_index);
+                                self.term_changed(&term, row_index);
                             }
 
                             let mut term_type =
@@ -273,14 +273,14 @@ impl View for Calculator {
                         let mut int_rate =
                             format!("{:.2}", self.cal_cfg.borrow().products[row_index].int_rate);
                         if ui.text_edit_singleline(&mut int_rate).changed() {
-                            self.int_rate_changed(&*int_rate, row_index);
+                            self.int_rate_changed(&int_rate, row_index);
                         };
                     });
                     row.col(|ui| {
                         let mut bean_rate =
                             format!("{:.2}", self.cal_cfg.borrow().products[row_index].bean_rate);
                         if ui.text_edit_singleline(&mut bean_rate).changed() {
-                            self.bean_rate_changed(&*bean_rate, row_index);
+                            self.bean_rate_changed(&bean_rate, row_index);
                         };
                     });
                     row.col(|ui| {

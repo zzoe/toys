@@ -116,7 +116,7 @@ impl View for FontBook {
                 ui.horizontal(|ui| {
                     if let Some(row_chars) = self.row_chars.get(row) {
                         for (chr, name) in row_chars {
-                            self.char_button(ui, *chr, &**name);
+                            self.char_button(ui, *chr, name);
                         }
                     }
                 });
@@ -148,21 +148,23 @@ impl FontBook {
         };
 
         if ui.add(button).on_hover_ui(tooltip_ui).clicked() {
-            ui.output().copied_text = chr.to_string();
+            ui.output_mut(|o| o.copied_text = chr.to_string());
         }
     }
 }
 
 fn available_characters(ui: &Ui) -> BTreeMap<char, String> {
-    ui.fonts()
-        .lock()
-        .fonts
-        .font(&FontId::new(35.0, FontFamily::Monospace)) // size is arbitrary for getting the characters
-        .characters()
-        .iter()
-        .filter(|chr| !chr.is_whitespace() && !chr.is_ascii_control())
-        .map(|&chr| (chr, char_name(chr)))
-        .collect()
+    ui.fonts(|fonts| {
+        fonts
+            .lock()
+            .fonts
+            .font(&FontId::new(35.0, FontFamily::Monospace)) // size is arbitrary for getting the characters
+            .characters()
+            .iter()
+            .filter(|chr| !chr.is_whitespace() && !chr.is_ascii_control())
+            .map(|&chr| (chr, char_name(chr)))
+            .collect()
+    })
 }
 
 fn char_name(chr: char) -> String {

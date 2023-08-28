@@ -8,7 +8,8 @@ fn main() {
         "Toys",
         eframe::NativeOptions::default(),
         Box::new(|cc| Box::new(toys::App::new(cc))),
-    );
+    )
+    .unwrap();
 }
 
 // when compiling to web using trunk.
