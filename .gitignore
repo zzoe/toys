@@ -1,0 +1,9 @@
+.idea
+.vscode
+target
+node_modules
+dist
+tailwind.css
+**/*.rs.bk
+Cargo.lock
+pnpm-lock.yaml
