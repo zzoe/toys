@@ -32,12 +32,12 @@ vim package.json
 ```json
 {
   "scripts": {
-    "watch": "tailwindcss -i ./input.css -o ./public/tailwind.css --watch"
+    "css": "tailwindcss -i ./input.css -o ./public/tailwind.css"
   }
 }
 ```
 # 编译调试
 ```shell
-pnpm watch
+pnpm css
 dx serve --release --platform desktop
 ```

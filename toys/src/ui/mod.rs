@@ -1,9 +1,14 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
+use fermi::Atom;
 
 use crate::ui::home::Home;
+use crate::ui::menu::Menu;
 
 mod home;
+mod menu;
+
+pub static USER_NAME: Atom<String> = Atom(|_| "default".to_string());
 
 #[rustfmt::skip]
 #[derive(Clone, Debug, PartialEq, Routable)]
@@ -14,7 +19,8 @@ pub enum Route {
 }
 
 fn Body(cx: Scope) -> Element {
-    let nav_hidden = use_state(cx, || "hidden");
+    let nav_hidden = use_state(cx, || true);
+
     render!(
         div { class: "flex flex-col min-h-screen",
             header { class: "p-3",
@@ -22,20 +28,17 @@ fn Body(cx: Scope) -> Element {
                     img {
                         width: 50,
                         src: "rustacean-orig-noshadow.svg",
-                        onclick: |_| if nav_hidden.is_empty() { nav_hidden.set("hidden") } else { nav_hidden.set("") }
+                        onclick: |_| nav_hidden.set(!nav_hidden.get()),
                     }
                     Link { to: Route::Home {}, "首页" }
                 }
                 nav { h1 { "Hello" } }
             }
             main { class: "grow flex flex-row p-3 space-x-3",
-                nav { class: "flex flex-col p-3 space-y-3 min-w-fit {nav_hidden}",
-                    label { "1" }
-                    label { "2" }
-                }
+                Menu{hidden: *nav_hidden.get()}
                 Outlet::<Route> {}
             }
-            footer { class: "flex flex-row justify-center p-3", p { "© 2023 zoe" } }
+            footer { class: "flex flex-row justify-center p-3", p { "Copyright © zoe" } }
         }
     )
 }
