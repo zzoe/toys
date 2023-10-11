@@ -1,0 +1,19 @@
+[package]
+name = "toy-server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { version = "*" }
+arc-swap = { version = "*" }
+async-std = { version = "*" }
+ctrlc = { version = "*" }
+toml = { version = "*" }
+poem = { version = "*", features = ["compression", "static-files"] }
+serde = { version = "*", features = ["derive"] }
+time = { version = "*" }
+tracing = { version = "*" }
+tracing-appender = { version = "*" }
+tracing-subscriber = { version = "*", features = ["local-time"] }
