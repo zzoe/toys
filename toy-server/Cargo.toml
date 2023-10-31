@@ -6,13 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { version = "*" }
 arc-swap = { version = "*" }
-async-std = { version = "*" }
+async-std = { version = "*", features = ["tokio1"] }
 ctrlc = { version = "*" }
 toml = { version = "*" }
-poem = { version = "*", features = ["compression", "static-files"] }
+poem = { version = "*", features = ["anyhow", "compression", "session", "static-files"] }
 serde = { version = "*", features = ["derive"] }
+serde_json = { version = "*" }
+surrealdb = { version = "*", features = ["kv-rocksdb"] }
+thiserror = { version = "*" }
 time = { version = "*" }
 tracing = { version = "*" }
 tracing-appender = { version = "*" }

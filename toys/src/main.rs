@@ -39,6 +39,8 @@ mod web {
 }
 
 fn main() {
+    toys::init();
+
     #[cfg(not(target_arch = "wasm32"))]
     desktop::launch();
 

@@ -49,7 +49,7 @@ pub(crate) struct LogCfg {
 impl Default for LogCfg {
     fn default() -> Self {
         LogCfg {
-            directory: "./logs/".to_owned(),
+            directory: "./logs".to_owned(),
             file_name: "log".to_owned(),
             level: "INFO".to_owned(),
         }
@@ -60,13 +60,15 @@ impl Default for LogCfg {
 pub(crate) struct WebCfg {
     pub(crate) address: String,
     pub(crate) assets_path: String,
+    pub(crate) db_path: String,
 }
 
 impl Default for WebCfg {
     fn default() -> Self {
         WebCfg {
             address: "127.0.0.1:8080".to_owned(),
-            assets_path: "dist".to_owned(),
+            assets_path: "./dist".to_owned(),
+            db_path: "./rocks.db".to_string(),
         }
     }
 }

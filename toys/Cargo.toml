@@ -11,7 +11,10 @@ dioxus = { version = "*" }
 dioxus-router = { version = "*" }
 fermi = {version = "*"}
 futures-util = {version = "*"}
+reqwest = { version = "*", features = ["cookies","json"] }
+thiserror = { version = "*" }
 tracing = {version = "*"}
+serde = { version = "1.0.190", features = ["derive"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 dioxus-desktop = { version = "*" }
