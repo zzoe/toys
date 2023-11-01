@@ -16,6 +16,7 @@ serde_json = { version = "*" }
 surrealdb = { version = "*", features = ["kv-rocksdb"] }
 thiserror = { version = "*" }
 time = { version = "*" }
+toy-schema = { path = "../toy-schema" }
 tracing = { version = "*" }
 tracing-appender = { version = "*" }
 tracing-subscriber = { version = "*", features = ["local-time"] }
