@@ -6,6 +6,7 @@ use poem::session::SessionStorage;
 use serde_json::Value;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
+use tracing::debug;
 
 use crate::error::ErrorConv;
 use crate::web::database;
@@ -49,6 +50,7 @@ impl SessionStorage for SurrealStorage {
         &self,
         session_id: &str,
     ) -> poem::Result<Option<BTreeMap<String, Value>>> {
+        debug!("load session {session_id}");
         self.db
             .select(("session", session_id))
             .await
@@ -61,6 +63,7 @@ impl SessionStorage for SurrealStorage {
         entries: &BTreeMap<String, Value>,
         _expires: Option<Duration>,
     ) -> poem::Result<()> {
+        debug!("update session {session_id}");
         self.db
             .update::<Option<BTreeMap<String, Value>>>(("session", session_id))
             .content(entries)
@@ -70,6 +73,7 @@ impl SessionStorage for SurrealStorage {
     }
 
     async fn remove_session(&self, session_id: &str) -> poem::Result<()> {
+        debug!("remove session {session_id}");
         self.db
             .delete::<Option<BTreeMap<String, Value>>>(("session", session_id))
             .await

@@ -8,7 +8,6 @@ pub(crate) const ROOT_CREDENTIALS: Root = Root {
 };
 
 pub(crate) async fn connect() -> Result<Surreal<Client>, surrealdb::Error> {
-    // let db = Surreal::new::<RocksDb>(endpoints(ROOT_CREDENTIALS)).await?;
     let db: Surreal<Client> = Surreal::init();
     db.connect::<Ws>("127.0.0.1:8000").await?;
 

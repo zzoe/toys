@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
-use fermi::{use_read, Atom};
+use fermi::{use_read, Atom, AtomId};
 
 use crate::ui::home::Home;
 use crate::ui::menu::Menu;
@@ -11,6 +11,10 @@ mod menu;
 mod sign;
 
 pub static AUTHENTICATED: Atom<bool> = Atom(|_| false);
+
+pub fn unique_id<V>(atom: &'static Atom<V>) -> AtomId {
+    atom as *const Atom<V> as AtomId
+}
 
 #[rustfmt::skip]
 #[derive(Clone, Debug, PartialEq, Routable)]

@@ -20,5 +20,6 @@ pub(crate) async fn sign_in(req: SignReq) -> Result<()> {
         .unwrap();
 
     http(Method::POST, url, &req).await?;
+
     Ok(())
 }

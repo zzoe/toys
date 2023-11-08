@@ -13,6 +13,7 @@ use toy_schema::sign::SignReq;
 
 use crate::error::Error::ResponseError;
 use crate::error::Result;
+use crate::ui::{unique_id, AUTHENTICATED};
 
 pub static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
 pub static SERVER_URL: &str = "http://127.0.0.1:8080/";
@@ -24,17 +25,21 @@ pub enum Api {
     SignIn(SignReq),
 }
 
-pub async fn api_service(mut rx: UnboundedReceiver<Api>, _atoms: Rc<AtomRoot>) {
+pub async fn api_service(mut rx: UnboundedReceiver<Api>, atoms: Rc<AtomRoot>) {
     while let Some(msg) = rx.next().await {
         match msg {
             Api::SignUp(req) => {
                 if let Err(e) = login::sign_up(req).await {
-                    error!("{e}");
+                    error!("注册失败： {e}");
+                } else {
+                    atoms.set(unique_id(&AUTHENTICATED), true);
                 }
             }
             Api::SignIn(req) => {
                 if let Err(e) = login::sign_in(req).await {
-                    error!("{e}");
+                    error!("登录失败： {e}");
+                } else {
+                    atoms.set(unique_id(&AUTHENTICATED), true);
                 }
             }
         }

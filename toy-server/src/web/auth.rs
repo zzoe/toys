@@ -5,12 +5,16 @@ use surrealdb::opt::auth::{Jwt, Scope};
 
 use toy_schema::sign::SignReq;
 
-use crate::error::Error::{SignInFail, SignUpFail, UnAuthorized};
+use crate::error::Error::{DoNotRepeat, SignInFail, SignUpFail, UnAuthorized};
 use crate::error::ErrorConv;
 use crate::web::database;
 
 #[handler]
 pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
+    if session.get::<Jwt>("token").is_some() {
+        return Err(poem::error::BadRequest(DoNotRepeat));
+    }
+
     let db = database::connect().await.internal_server_error()?;
     let credentials = Scope {
         namespace: "toy",
@@ -28,6 +32,10 @@ pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result
 
 #[handler]
 pub async fn sign_in(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
+    if session.get::<Jwt>("token").is_some() {
+        return Err(poem::error::BadRequest(DoNotRepeat));
+    }
+
     let db = database::connect().await.internal_server_error()?;
     let credentials = Scope {
         namespace: "toy",
