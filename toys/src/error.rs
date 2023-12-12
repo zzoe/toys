@@ -8,4 +8,6 @@ pub enum Error {
     HttpError(#[from] reqwest::Error),
     #[error("响应失败: {status}-{msg}")]
     ResponseError { status: StatusCode, msg: String },
+    #[error("系统异常")]
+    ServerException,
 }

@@ -23,6 +23,7 @@ pub mod login;
 pub enum Api {
     SignUp(SignReq),
     SignIn(SignReq),
+    SignCheck,
 }
 
 pub async fn api_service(mut rx: UnboundedReceiver<Api>, atoms: Rc<AtomRoot>) {
@@ -42,6 +43,11 @@ pub async fn api_service(mut rx: UnboundedReceiver<Api>, atoms: Rc<AtomRoot>) {
                     atoms.set(unique_id(&AUTHENTICATED), true);
                 }
             }
+            Api::SignCheck => {
+                if login::sign_check().await.is_ok() {
+                    atoms.set(unique_id(&AUTHENTICATED), true);
+                }
+            }
         }
     }
 }
@@ -52,6 +58,7 @@ pub async fn http<Req: Serialize>(method: Method, url: Url, req: &Req) -> Result
     let res = client.request(method, url).json(req).send().await?;
     let status = res.status();
     let msg = res.bytes().await?;
+
     if !status.is_success() {
         return Err(ResponseError {
             status,

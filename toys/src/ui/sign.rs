@@ -11,6 +11,7 @@ pub fn Sign(cx: Scope) -> Element {
     let user_password = use_state(cx, || "".to_string());
 
     let api = use_coroutine_handle::<Api>(cx).unwrap();
+    api.send(Api::SignCheck);
 
     render!(
         div { class: "flex flex-col min-h-screen",
@@ -46,43 +47,41 @@ pub fn Sign(cx: Scope) -> Element {
                     placeholder: "密码",
                     onchange: move |evt| user_password.set(evt.value.clone()),
                 }
-                div { class: "flex flex-row p-3 space-x-3 items-center",
-                    input{
-                        class: "border-2 rounded",
-                        id: "button-submit",
-                        r#type: "button",
-                        value: if *sign_in.get(){
-                            "登录"
-                        }else {
-                            "注册"
-                        },
-                        onclick: |_|{
-                            if *sign_in.get(){
-                                api.send(Api::SignIn(SignReq{
-                                    name: user_name.to_string(),
-                                    email: user_email.to_string(),
-                                    password: user_password.to_string(),
-                                }));
-                            }else{
-                                api.send(Api::SignUp(SignReq{
-                                    name: user_name.to_string(),
-                                    email: user_email.to_string(),
-                                    password: user_password.to_string(),
-                                }));
-                            }
-                        },
-                    }
-                    input{
-                        class: "border-2 rounded text-xs",
-                        id: "button-conv",
-                        r#type: "button",
-                        value: if !*sign_in.get(){
-                            "登录"
-                        }else {
-                            "注册"
-                        },
-                        onclick: |_| sign_in.set(!*sign_in.get()),
-                    }
+                input{
+                    class: "border-2 rounded",
+                    id: "button-submit",
+                    r#type: "button",
+                    value: if *sign_in.get(){
+                        "登录"
+                    }else {
+                        "注册"
+                    },
+                    onclick: |_|{
+                        if *sign_in.get(){
+                            api.send(Api::SignIn(SignReq{
+                                name: user_name.to_string(),
+                                email: user_email.to_string(),
+                                password: user_password.to_string(),
+                            }));
+                        }else{
+                            api.send(Api::SignUp(SignReq{
+                                name: user_name.to_string(),
+                                email: user_email.to_string(),
+                                password: user_password.to_string(),
+                            }));
+                        }
+                    },
+                }
+                input{
+                    class: "border-2 rounded text-xs",
+                    id: "button-conv",
+                    r#type: "button",
+                    value: if !*sign_in.get(){
+                        "已有账号，立即登录"
+                    }else {
+                        "尚无账号，立即注册"
+                    },
+                    onclick: |_| sign_in.set(!*sign_in.get()),
                 }
             }
             footer { class: "flex flex-row justify-center p-3", p { "Copyright © zoe" } }

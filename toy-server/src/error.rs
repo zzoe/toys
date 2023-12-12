@@ -5,8 +5,6 @@ use tracing::error;
 pub enum Error {
     #[error("系统异常")]
     InternalServerErr,
-    #[error("请勿重复操作")]
-    DoNotRepeat,
     #[error("注册失败")]
     SignUpFail,
     #[error("登录失败")]

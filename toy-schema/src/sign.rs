@@ -7,3 +7,6 @@ pub struct SignReq {
     pub email: String,
     pub password: String,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct SignCheck;

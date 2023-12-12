@@ -2,17 +2,19 @@ use poem::session::Session;
 use poem::web::Json;
 use poem::{handler, Endpoint, Middleware, Request};
 use surrealdb::opt::auth::{Jwt, Scope};
+use tracing::warn;
 
 use toy_schema::sign::SignReq;
 
-use crate::error::Error::{DoNotRepeat, SignInFail, SignUpFail, UnAuthorized};
+use crate::error::Error::{SignInFail, SignUpFail, UnAuthenticated, UnAuthorized};
 use crate::error::ErrorConv;
 use crate::web::database;
 
 #[handler]
 pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
     if session.get::<Jwt>("token").is_some() {
-        return Err(poem::error::BadRequest(DoNotRepeat));
+        session.renew();
+        // return Err(poem::error::BadRequest(DoNotRepeat));
     }
 
     let db = database::connect().await.internal_server_error()?;
@@ -33,7 +35,8 @@ pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result
 #[handler]
 pub async fn sign_in(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
     if session.get::<Jwt>("token").is_some() {
-        return Err(poem::error::BadRequest(DoNotRepeat));
+        session.renew();
+        // return Err(poem::error::BadRequest(DoNotRepeat));
     }
 
     let db = database::connect().await.internal_server_error()?;
@@ -49,6 +52,31 @@ pub async fn sign_in(sign_req: Json<SignReq>, session: &Session) -> poem::Result
     session.set("token", token);
 
     Ok("登录成功".to_string())
+}
+
+#[handler]
+pub async fn sign_check(session: &Session) -> poem::Result<String> {
+    let Some(token) = session.get::<Jwt>("token") else {
+        session.purge();
+        return Err(poem::error::Unauthorized(UnAuthenticated));
+    };
+
+    let db = match database::connect().await {
+        Ok(d) => d,
+        Err(e) => {
+            warn!("数据库连接失败：{e}");
+            session.purge();
+            return Err(poem::error::Unauthorized(UnAuthenticated));
+        }
+    };
+
+    if let Err(e) = db.authenticate(token).await {
+        warn!("数据库token验证失败：{e}");
+        session.purge();
+        return Err(poem::error::Unauthorized(UnAuthenticated));
+    }
+
+    Ok("已登录".to_string())
 }
 
 pub struct Auth {}

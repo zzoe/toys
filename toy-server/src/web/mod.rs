@@ -9,7 +9,7 @@ use poem::session::{CookieConfig, ServerSession};
 use poem::{post, EndpointExt, IntoEndpoint, Route, Server};
 
 use crate::config::Config;
-use crate::web::auth::{sign_in, sign_up, Auth};
+use crate::web::auth::{sign_in, sign_up, Auth, sign_check};
 use crate::web::session::SurrealStorage;
 use crate::GLOBAL_CONFIG;
 
@@ -27,6 +27,7 @@ pub(crate) async fn start(signal: impl Future<Output = ()>) {
     let route = Route::new()
         .at("/sign_up", post(sign_up))
         .at("/sign_in", post(sign_in))
+        .at("/sign_check", post(sign_check))
         .nest("/api", post(apis()))
         .nest(
             "/",
@@ -40,7 +41,7 @@ pub(crate) async fn start(signal: impl Future<Output = ()>) {
         .with(CatchPanic::new())
         .with(ServerSession::new(
             CookieConfig::default(),
-            SurrealStorage::new().await.unwrap(),
+            SurrealStorage::new().await.expect("Session数据库异常"),
         ));
 
     let res = Server::new(TcpListener::bind(&cfg.address))
