@@ -1,7 +1,7 @@
 use arc_swap::access::Access;
 use async_std::channel::bounded;
 use async_std::task;
-use time::format_description::well_known::Rfc3339;
+use time::macros::format_description;
 use time::UtcOffset;
 use tracing::Level;
 use tracing_appender::non_blocking::WorkerGuard;
@@ -40,6 +40,7 @@ fn init_log() -> WorkerGuard {
 
     let file_appender = tracing_appender::rolling::daily(&*cfg.directory, &*cfg.file_name);
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
+    let time_format = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
 
     tracing_subscriber::fmt()
         .with_ansi(false)
@@ -47,7 +48,7 @@ fn init_log() -> WorkerGuard {
         .with_max_level(cfg.level.parse::<Level>().expect("日志级别配置错误"))
         .with_timer(OffsetTime::new(
             UtcOffset::from_hms(8, 0, 0).unwrap(),
-            Rfc3339,
+            time_format,
         ))
         .with_writer(non_blocking)
         .init();

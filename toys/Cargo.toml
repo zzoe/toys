@@ -27,3 +27,4 @@ tracing-subscriber = { version = "*", features = ["local-time"] }
 console_error_panic_hook = { version = "*" }
 dioxus-web = { version = "*" }
 tracing-wasm = { version = "*" }
+web-sys = { version = "*" }

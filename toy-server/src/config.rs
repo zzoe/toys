@@ -60,15 +60,13 @@ impl Default for LogCfg {
 pub(crate) struct WebCfg {
     pub(crate) address: String,
     pub(crate) assets_path: String,
-    pub(crate) db_path: String,
 }
 
 impl Default for WebCfg {
     fn default() -> Self {
         WebCfg {
-            address: "127.0.0.1:8080".to_owned(),
+            address: "0.0.0.0:8080".to_owned(),
             assets_path: "./dist".to_owned(),
-            db_path: "./rocks.db".to_string(),
         }
     }
 }

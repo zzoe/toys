@@ -9,7 +9,7 @@ use poem::session::{CookieConfig, ServerSession};
 use poem::{post, EndpointExt, IntoEndpoint, Route, Server};
 
 use crate::config::Config;
-use crate::web::auth::{sign_in, sign_up, Auth, sign_check};
+use crate::web::auth::{sign_check, sign_in, sign_up, Auth};
 use crate::web::session::SurrealStorage;
 use crate::GLOBAL_CONFIG;
 
@@ -40,7 +40,7 @@ pub(crate) async fn start(signal: impl Future<Output = ()>) {
         .with(Tracing)
         .with(CatchPanic::new())
         .with(ServerSession::new(
-            CookieConfig::default(),
+            CookieConfig::default().secure(false),
             SurrealStorage::new().await.expect("Session数据库异常"),
         ));
 

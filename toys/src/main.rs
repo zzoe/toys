@@ -19,6 +19,8 @@ mod desktop {
             ))
             .init();
 
+        toys::init();
+
         dioxus_desktop::launch_cfg(
             App,
             dioxus_desktop::Config::new()
@@ -34,13 +36,12 @@ mod web {
     pub fn launch() {
         console_error_panic_hook::set_once();
         tracing_wasm::set_as_global_default();
+        toys::init();
         dioxus_web::launch(App)
     }
 }
 
 fn main() {
-    toys::init();
-
     #[cfg(not(target_arch = "wasm32"))]
     desktop::launch();
 

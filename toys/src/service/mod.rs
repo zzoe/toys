@@ -16,7 +16,7 @@ use crate::error::Result;
 use crate::ui::{unique_id, AUTHENTICATED};
 
 pub static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
-pub static SERVER_URL: &str = "http://127.0.0.1:8080/";
+pub static HTTP_URL: OnceLock<Url> = OnceLock::new();
 
 pub mod login;
 
@@ -52,8 +52,9 @@ pub async fn api_service(mut rx: UnboundedReceiver<Api>, atoms: Rc<AtomRoot>) {
     }
 }
 
-pub async fn http<Req: Serialize>(method: Method, url: Url, req: &Req) -> Result<Bytes> {
+pub async fn http<Req: Serialize>(method: Method, path: &str, req: &Req) -> Result<Bytes> {
     let client = HTTP_CLIENT.get().unwrap();
+    let url = HTTP_URL.get().and_then(|u| u.join(path).ok()).unwrap();
 
     let res = client.request(method, url).json(req).send().await?;
     let status = res.status();
