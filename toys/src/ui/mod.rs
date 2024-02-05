@@ -4,13 +4,11 @@ use fermi::{use_read, Atom, AtomId};
 
 use crate::ui::home::Home;
 use crate::ui::menu::Menu;
-use crate::ui::sign::Sign;
+use crate::ui::sign::{Sign, AUTHENTICATED};
 
-mod home;
-mod menu;
-mod sign;
-
-pub static AUTHENTICATED: Atom<bool> = Atom(|_| false);
+pub(crate) mod home;
+pub(crate) mod menu;
+pub(crate) mod sign;
 
 pub fn unique_id<V>(atom: &'static Atom<V>) -> AtomId {
     atom as *const Atom<V> as AtomId

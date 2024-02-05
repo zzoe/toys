@@ -1,14 +1,40 @@
 use dioxus::prelude::*;
+use fermi::{use_read, Atom};
 
 use toy_schema::sign::SignReq;
 
 use crate::service::Api;
+
+pub static AUTHENTICATED: Atom<bool> = Atom(|_| false);
+pub static ALERT_MSG: Atom<AlertMsg> = Atom(|_| Default::default());
+
+#[derive(Default)]
+pub struct AlertMsg {
+    pub typ: Option<AlertType>,
+    pub msg: String,
+}
+
+impl AlertMsg {
+    pub fn new(typ: Option<AlertType>, msg: impl ToString) -> Self {
+        AlertMsg {
+            typ,
+            msg: msg.to_string(),
+        }
+    }
+}
+
+pub enum AlertType {
+    Info,
+    Warn,
+    Error,
+}
 
 pub fn Sign(cx: Scope) -> Element {
     let sign_in = use_state(cx, || true);
     let user_name = use_state(cx, || "".to_string());
     let user_email = use_state(cx, || "".to_string());
     let user_password = use_state(cx, || "".to_string());
+    let alter_msg = use_read(cx, &ALERT_MSG);
 
     let api = use_coroutine_handle::<Api>(cx).unwrap();
     api.send(Api::SignCheck);
@@ -31,9 +57,42 @@ pub fn Sign(cx: Scope) -> Element {
                     div{class:"absolute top-0 w-full h-full bg-gray-900",
                         style: "background-image: url(register_bg.png); background-size: 100%; background-repeat: no-repeat;"
                     }
+                    div{class: "mx-auto sm:w-3/4 md:w-2/4 fixed z-50 inset-x-0 top-10 rounded-xl border border-gray-100 bg-white p-4",
+                        role: "alert",
+                        hidden: alter_msg.typ.is_none(),
+                        div{class: "flex items-start gap-4 text-red-600",
+                            img{width: 24,src:"error.svg",alt:""}
+                            // svg{xmlns:"http://www.w3.org/2000/svg",
+                            //         fill: "none",
+                            //         view_box: "0 0 24 24",
+                            //         stroke_width: "2",
+                            //         stroke: "red",
+                            //         class: "h-6 w-6",
+                            //     circle{ cx:"12",cy:"12",r:"10" }
+                            //     text{x:"6",y:"17",stroke_width:"1", "×"}
+                            // }
+                            div{class:"flex-1",
+                                strong{class:"block font-medium", "失败"}
+                                p{class:"mt-1 text-sm", alter_msg.msg.as_str()}
+                            }
+                            button{class:"text-gray-500 transition hover:text-gray-600",
+                                svg{xmlns:"http://www.w3.org/2000/svg",
+                                    fill: "none",
+                                    view_box: "0 0 24 24",
+                                    stroke_width: "1.5",
+                                    stroke:"currentColor",
+                                    class:"h-6 w-6",
+                                    path{stroke_linecap:"round",
+                                        stroke_linejoin:"round",
+                                        d:"M6 18L18 6M6 6l12 12"
+                                    }
+                                }
+                            }
+                        }
+                    }
                     div{ class:"container mx-auto px-4 h-full",
                         div{ class: "flex content-center items-center justify-center h-full",
-                            div{ class:"w-full lg:w-4/12 px-4",
+                            div{ class:"w-full lg:w-6/12 px-4",
                                 div{ class:"relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-gray-300 border-0",
                                     div{class:"flex-auto px-4 py-6 lg:px-10",
                                         form{

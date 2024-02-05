@@ -8,9 +8,11 @@ edition = "2021"
 [dependencies]
 arc-swap = { version = "*" }
 async-std = { version = "*", features = ["tokio1"] }
+async-trait = {version = "*"}
 ctrlc = { version = "*" }
+mime = {version = "*"}
 toml = { version = "*" }
-poem = { version = "*", features = ["anyhow", "compression", "session", "static-files"] }
+poem = { version = "*", features = ["anyhow", "compression", "session", "static-files", "rustls"] }
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*" }
 surrealdb = { version = "*", features = ["kv-rocksdb"] }

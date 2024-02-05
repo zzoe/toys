@@ -33,6 +33,9 @@ vim package.json
 {
   "scripts": {
     "css": "tailwindcss -i ./input.css -o ./public/tailwind.css"
+  },
+  "devDependencies": {
+     "tailwindcss": "^3.4.1"
   }
 }
 ```

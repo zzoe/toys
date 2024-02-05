@@ -10,3 +10,4 @@ tailwind.css
 Cargo.lock
 pnpm-lock.yaml
 config.*.toml
+*.pem

@@ -7,13 +7,11 @@ use fermi::AtomRoot;
 use futures_util::stream::StreamExt;
 use reqwest::{Client, Method, Url};
 use serde::Serialize;
-use tracing::error;
 
 use toy_schema::sign::SignReq;
 
 use crate::error::Error::ResponseError;
 use crate::error::Result;
-use crate::ui::{unique_id, AUTHENTICATED};
 
 pub static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
 pub static HTTP_URL: OnceLock<Url> = OnceLock::new();
@@ -28,26 +26,11 @@ pub enum Api {
 
 pub async fn api_service(mut rx: UnboundedReceiver<Api>, atoms: Rc<AtomRoot>) {
     while let Some(msg) = rx.next().await {
+        let atoms_clone = atoms.clone();
         match msg {
-            Api::SignUp(req) => {
-                if let Err(e) = login::sign_up(req).await {
-                    error!("注册失败： {e}");
-                } else {
-                    atoms.set(unique_id(&AUTHENTICATED), true);
-                }
-            }
-            Api::SignIn(req) => {
-                if let Err(e) = login::sign_in(req).await {
-                    error!("登录失败： {e}");
-                } else {
-                    atoms.set(unique_id(&AUTHENTICATED), true);
-                }
-            }
-            Api::SignCheck => {
-                if login::sign_check().await.is_ok() {
-                    atoms.set(unique_id(&AUTHENTICATED), true);
-                }
-            }
+            Api::SignUp(req) => login::sign_up(atoms_clone, req).await,
+            Api::SignIn(req) => login::sign_in(atoms_clone, req).await,
+            Api::SignCheck => login::sign_check(atoms_clone).await,
         }
     }
 }
