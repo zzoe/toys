@@ -14,6 +14,7 @@ fermi = { version = "*" }
 futures-util = { version = "*" }
 reqwest = { version = "*", features = ["cookies", "json"] }
 serde = { version = "*", features = ["derive"] }
+strum = {version = "*", features = ["derive"]}
 thiserror = { version = "*" }
 toy-schema = { path = "../toy-schema" }
 tracing = { version = "*" }

@@ -4,7 +4,6 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::Router;
 use fermi::use_init_atom_root;
 use reqwest::{ClientBuilder, Url};
-use tracing::info;
 
 use crate::service::{api_service, HTTP_CLIENT, HTTP_URL};
 

@@ -1,17 +1,15 @@
-use std::rc::Rc;
-
 use fermi::AtomRoot;
 use reqwest::Method;
 use tracing::error;
 
-use toy_schema::sign::{SignCheck, SignReq};
+use toy_schema::sign::SignReq;
 
 use crate::service::http;
-use crate::ui::sign::{ALERT_MSG, AlertMsg, AlertType, AUTHENTICATED};
+use crate::ui::sign::{AlertMsg, AlertType, ALERT_MSG, AUTHENTICATED};
 use crate::ui::unique_id;
 
-pub async fn sign_up(atoms: Rc<AtomRoot>, req: SignReq) {
-    if let Err(e) = http(Method::POST, "/sign_up", &req).await {
+pub async fn sign_up(atoms: &AtomRoot, req: SignReq) {
+    if let Err(e) = http(atoms, Method::POST, "/api/sign_up", Some(&req)).await {
         error!("注册失败： {e}");
         atoms.set(
             unique_id(&ALERT_MSG),
@@ -22,8 +20,8 @@ pub async fn sign_up(atoms: Rc<AtomRoot>, req: SignReq) {
     }
 }
 
-pub async fn sign_in(atoms: Rc<AtomRoot>, req: SignReq) {
-    if let Err(e) = http(Method::POST, "/sign_in", &req).await {
+pub async fn sign_in(atoms: &AtomRoot, req: SignReq) {
+    if let Err(e) = http(atoms, Method::POST, "/api/sign_in", Some(&req)).await {
         error!("登录失败： {e}");
         atoms.set(
             unique_id(&ALERT_MSG),
@@ -34,8 +32,8 @@ pub async fn sign_in(atoms: Rc<AtomRoot>, req: SignReq) {
     }
 }
 
-pub async fn sign_check(atoms: Rc<AtomRoot>) {
-    if http(Method::POST, "/sign_check", &SignCheck {})
+pub async fn sign_check(atoms: &AtomRoot) {
+    if http::<()>(atoms, Method::POST, "/api/sign_check", None)
         .await
         .is_ok()
     {

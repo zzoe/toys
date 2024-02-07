@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use fermi::{use_read, Atom};
+use fermi::{use_atom_state, Atom};
 
 use toy_schema::sign::SignReq;
 
@@ -34,8 +34,7 @@ pub fn Sign(cx: Scope) -> Element {
     let user_name = use_state(cx, || "".to_string());
     let user_email = use_state(cx, || "".to_string());
     let user_password = use_state(cx, || "".to_string());
-    let alter_msg = use_read(cx, &ALERT_MSG);
-
+    let alter_msg = use_atom_state(cx, &ALERT_MSG);
     let api = use_coroutine_handle::<Api>(cx).unwrap();
     api.send(Api::SignCheck);
 
@@ -62,20 +61,12 @@ pub fn Sign(cx: Scope) -> Element {
                         hidden: alter_msg.typ.is_none(),
                         div{class: "flex items-start gap-4 text-red-600",
                             img{width: 24,src:"error.svg",alt:""}
-                            // svg{xmlns:"http://www.w3.org/2000/svg",
-                            //         fill: "none",
-                            //         view_box: "0 0 24 24",
-                            //         stroke_width: "2",
-                            //         stroke: "red",
-                            //         class: "h-6 w-6",
-                            //     circle{ cx:"12",cy:"12",r:"10" }
-                            //     text{x:"6",y:"17",stroke_width:"1", "×"}
-                            // }
                             div{class:"flex-1",
                                 strong{class:"block font-medium", "失败"}
                                 p{class:"mt-1 text-sm", alter_msg.msg.as_str()}
                             }
                             button{class:"text-gray-500 transition hover:text-gray-600",
+                                onclick: |_| alter_msg.set(Default::default()),
                                 svg{xmlns:"http://www.w3.org/2000/svg",
                                     fill: "none",
                                     view_box: "0 0 24 24",
@@ -138,10 +129,10 @@ pub fn Sign(cx: Scope) -> Element {
                                                 }
                                             }
                                             div{class:"text-center mt-6 mb-3",
-                                                button{ class: "bg-gray-900 text-white active:bg-gray-700 text-sm font-bold px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full",
+                                                input{ class: "bg-gray-900 text-white active:bg-gray-700 text-sm font-bold px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full",
                                                     style: "transition: all 0.15s ease 0s;",
                                                     id: "button-submit",
-                                                    r#type: "button",
+                                                    r#type: "submit",
                                                     onclick: |_|{
                                                         if *sign_in.get(){
                                                             api.send(Api::SignIn(SignReq{

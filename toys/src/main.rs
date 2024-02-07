@@ -4,15 +4,16 @@
 mod desktop {
     use time::format_description::well_known::Rfc3339;
     use time::UtcOffset;
-    use toys::App;
     use tracing::level_filters::LevelFilter;
     use tracing_subscriber::fmt::time::OffsetTime;
+
+    use toys::App;
 
     pub fn launch() {
         tracing_subscriber::fmt()
             .with_ansi(false)
             .with_thread_ids(true)
-            .with_max_level(LevelFilter::DEBUG)
+            .with_max_level(LevelFilter::INFO)
             .with_timer(OffsetTime::new(
                 UtcOffset::from_hms(8, 0, 0).unwrap(),
                 Rfc3339,

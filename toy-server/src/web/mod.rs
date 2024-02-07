@@ -28,11 +28,7 @@ pub(crate) async fn start(signal: impl Future<Output = ()>) {
         .load();
 
     let route = Route::new()
-        .at("/sign_up", post(sign_up))
-        .at("/sign_in", post(sign_in))
-        .at("/sign_check", post(sign_check))
-        .at("/reload", post(reload))
-        .nest("/api", post(apis()))
+        .nest("/api", apis().await)
         .nest(
             "/",
             StaticFilesEndpoint::new(&cfg.assets_path)
@@ -44,11 +40,7 @@ pub(crate) async fn start(signal: impl Future<Output = ()>) {
         .with(NormalizePath::new(TrailingSlash::Trim))
         .with(Compression::new())
         .with(Tracing)
-        .with(CatchPanic::new())
-        .with(ServerSession::new(
-            CookieConfig::default().secure(false),
-            SurrealStorage::new().await.expect("Session数据库异常"),
-        ));
+        .with(CatchPanic::new());
 
     let res = Server::new(
         TcpListener::bind(&cfg.address).rustls(
@@ -72,6 +64,17 @@ async fn reload() {
     config::reload();
 }
 
-fn apis() -> impl IntoEndpoint {
-    Route::new().with(Auth {})
+async fn apis() -> impl IntoEndpoint {
+    Route::new()
+        .at("/sign_up", post(sign_up))
+        .at("/sign_in", post(sign_in))
+        .at("/sign_check", post(sign_check))
+        .nest("/auth", need_auth())
+        .with(ServerSession::new(
+            CookieConfig::default().secure(false),
+            SurrealStorage::new().await.expect("Session数据库异常"),
+        ))
+}
+fn need_auth() -> impl IntoEndpoint {
+    Route::new().at("/reload", post(reload)).with(Auth {})
 }
