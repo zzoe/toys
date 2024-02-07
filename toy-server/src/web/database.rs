@@ -23,7 +23,7 @@ mod test {
     use async_std::task::block_on;
     use serde_json::Value;
 
-    use crate::web::database::connect;
+    use crate::web::database::{connect, ROOT_CREDENTIALS};
 
     #[test]
     fn db_select() {
@@ -35,24 +35,29 @@ mod test {
         let db = match connect().await {
             Ok(db) => db,
             Err(e) => {
-                println!("连接数据库失败：{e}");
-                return;
+                panic!("连接数据库失败：{e}");
             }
         };
         println!("2");
 
+        if let Err(e) = db.signin(ROOT_CREDENTIALS).await {
+            panic!("root用户登录失败: {e}");
+        }
+        println!("3");
+
         let entries: BTreeMap<String, Value> = match db
-            .select(("session", "fd0qOmHiH8xlg_jHjCpokkCzLx0Ggi9UBQi7VB68BmM"))
+            .select(("session", "9ncx3SiLjSVPq2T2s1niQlg6JiChCRVoG3iEIJ4kCVI"))
             .await
         {
-            Ok(Some(e)) => e,
+            Ok(Some::<BTreeMap<String, Value>>(mut e)) => {
+                e.remove("id");
+                e
+            }
             Ok(None) => {
-                println!("select session 为空");
-                return;
+                panic!("select session 为空");
             }
             Err(e) => {
-                println!("select session 失败：{e}");
-                return;
+                panic!("select session 失败：{e}");
             }
         };
 
@@ -61,13 +66,13 @@ mod test {
         if let Err(e) = db
             .update::<Option<BTreeMap<String, Value>>>((
                 "session",
-                "fd0qOmHiH8xlg_jHjCpokkCzLx0Ggi9UBQi7VB68BmM",
+                "9ncx3SiLjSVPq2T2s1niQlg6JiChCRVoG3iEIJ4kCVI",
             ))
             .content(entries)
             .await
         {
-            println!("update session 失败：{e}");
+            panic!("update session 失败：{e}");
         }
-        println!("3");
+        println!("success");
     }
 }
