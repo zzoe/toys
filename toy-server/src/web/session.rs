@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
+use std::future::Future;
 use std::time::Duration;
 
-use poem::async_trait;
 use poem::session::SessionStorage;
 use serde_json::Value;
 use surrealdb::engine::remote::ws::Client;
@@ -44,50 +44,58 @@ impl SurrealStorage {
     }
 }
 
-#[async_trait]
 impl SessionStorage for SurrealStorage {
-    async fn load_session(
-        &self,
-        session_id: &str,
-    ) -> poem::Result<Option<BTreeMap<String, Value>>> {
-        info!("load session {session_id}");
-        match self
-            .db
-            .select(("session", session_id))
-            // .query("select * omit id from session where id = $id")
-            // .bind(("id", format!("session:{session_id}")))
-            .await
-        {
-            Ok(Some::<BTreeMap<String, Value>>(mut res)) => {
-                res.remove("id");
-                Ok(Some(res))
+    fn load_session<'a>(
+        &'a self,
+        session_id: &'a str,
+    ) -> impl Future<Output = poem::Result<Option<BTreeMap<String, Value>>>> + Send + 'a {
+        async move {
+            info!("load session {session_id}");
+            match self
+                .db
+                .select(("session", session_id))
+                // .query("select * omit id from session where id = $id")
+                // .bind(("id", format!("session:{session_id}")))
+                .await
+            {
+                Ok(Some::<BTreeMap<String, Value>>(mut res)) => {
+                    res.remove("id");
+                    Ok(Some(res))
+                }
+                o => o.internal_server_error(),
             }
-            o => o.internal_server_error(),
         }
     }
 
-    async fn update_session(
-        &self,
-        session_id: &str,
-        entries: &BTreeMap<String, Value>,
+    fn update_session<'a>(
+        &'a self,
+        session_id: &'a str,
+        entries: &'a BTreeMap<String, Value>,
         _expires: Option<Duration>,
-    ) -> poem::Result<()> {
-        info!("update session {session_id}");
-        info!("{entries:#?}");
-        self.db
-            .update::<Option<BTreeMap<String, Value>>>(("session", session_id))
-            .content(entries)
-            .await
-            .map(|_| ())
-            .internal_server_error()
+    ) -> impl Future<Output = poem::Result<()>> + Send + 'a {
+        async move {
+            info!("update session {session_id}");
+            info!("{entries:#?}");
+            self.db
+                .update::<Option<BTreeMap<String, Value>>>(("session", session_id))
+                .content(entries)
+                .await
+                .map(|_| ())
+                .internal_server_error()
+        }
     }
 
-    async fn remove_session(&self, session_id: &str) -> poem::Result<()> {
-        debug!("remove session {session_id}");
-        self.db
-            .delete::<Option<BTreeMap<String, Value>>>(("session", session_id))
-            .await
-            .map(|_| ())
-            .internal_server_error()
+    fn remove_session<'a>(
+        &'a self,
+        session_id: &'a str,
+    ) -> impl Future<Output = poem::Result<()>> + Send + 'a {
+        async move {
+            debug!("remove session {session_id}");
+            self.db
+                .delete::<Option<BTreeMap<String, Value>>>(("session", session_id))
+                .await
+                .map(|_| ())
+                .internal_server_error()
+        }
     }
 }

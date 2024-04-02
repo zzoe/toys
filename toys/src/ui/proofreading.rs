@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
-use fermi::{Atom, use_atom_state};
 
-pub static INPUT_TEXT: Atom<String> = Atom(|_| String::new());
+#[derive(Default)]
+pub struct InputText(String);
 
-pub fn Proofreading(cx: Scope) -> Element {
-    let input_text = use_atom_state(cx, &INPUT_TEXT);
+pub fn Proofreading() -> Element {
+    let mut input_text = use_context_provider(|| Signal::new(InputText::default()));
 
-    render!(article { class:"grid grid-cols-4 gap-3 w-full",
+    rsx!(article { class:"grid grid-cols-4 gap-3 w-full",
         div{ class:"col-start-1 col-end-4 flex flex-col p-3 border-e",
             label { class: "block text-sm font-medium text-gray-700",
                 r#for: "InputText",
@@ -15,9 +15,9 @@ pub fn Proofreading(cx: Scope) -> Element {
             textarea { class: "flex-1 resize-none mt-2 mr-3 p-3 rounded-lg align-top shadow-sm border focus:outline-none sm:text-sm",
                 id: "InputText",
                 placeholder: "输入需要校验的文本",
-                value: input_text.as_str(),
-                onchange: |evt|{
-                    input_text.set(evt.value.clone());
+                value: &*input_text.read().0,
+                onchange: move |evt|{
+                    input_text.write().0 = evt.value();
                 },
             }
         }

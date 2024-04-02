@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
-use fermi::{use_atom_state, use_read, Atom, AtomId};
 use strum::{Display, IntoStaticStr};
 
 use crate::ui::config::Settings;
@@ -13,11 +12,7 @@ pub(crate) mod home;
 pub(crate) mod proofreading;
 pub(crate) mod sign;
 
-pub static CURRENT_PAGE: Atom<CurrentPage> = Atom(|_| CurrentPage::Home);
-
-pub fn unique_id<V>(atom: &'static Atom<V>) -> AtomId {
-    atom as *const Atom<V> as AtomId
-}
+pub static CURRENT_PAGE: GlobalSignal<CurrentPage> = Signal::global(|| CurrentPage::Home);
 
 #[rustfmt::skip]
 #[derive(Clone, Debug, PartialEq, Routable)]
@@ -31,7 +26,7 @@ pub enum Route {
     Settings {},
 }
 
-#[derive(Display, IntoStaticStr, Eq, PartialEq)]
+#[derive(Clone, Display, IntoStaticStr, Eq, PartialEq)]
 pub enum CurrentPage {
     #[strum(serialize = "")]
     Home,
@@ -41,29 +36,26 @@ pub enum CurrentPage {
     Settings,
 }
 
-fn Body(cx: Scope) -> Element {
-    let menu_hidden = use_state(cx, || false);
-    let menu_hidden_css = menu_hidden.get().then_some("hidden").unwrap_or_default();
-    let authenticated = use_read(cx, &AUTHENTICATED);
-    let current_page = use_atom_state(cx, &CURRENT_PAGE);
-    let current_page_str: &'static str = current_page.get().into();
+fn Body() -> Element {
+    let mut menu_hidden = use_signal(|| false);
+    let menu_hidden_css = menu_hidden().then_some("hidden").unwrap_or_default();
     let nav_hidden_css = CurrentPage::Home
-        .eq(current_page.get())
+        .eq(&CURRENT_PAGE.read())
         .then_some("hidden")
         .unwrap_or_default();
 
-    if *authenticated {
+    if AUTHENTICATED() {
         // 登录后
-        render!(
-            div { class: "flex flex-col min-h-screen",
+        rsx!(
+            div { class: "flex flex-col min-h-screen mx-auto",
             header { class: "p-3",
                 div { class: "flex flex-row p-3 space-x-6 items-center",
                     img {
                         width: 50,
                         src: "rustacean-orig-noshadow.svg",
                         alt:"",
-                        onclick: |_| {
-                            menu_hidden.set(!*menu_hidden.get());
+                        onclick: move|_| {
+                            *menu_hidden.write() = !menu_hidden();
                         }
                     }
                     nav { class:"flex",
@@ -71,7 +63,7 @@ fn Body(cx: Scope) -> Element {
                             li{ class:"flex items-center",
                                 Link { class:"flex h-10 items-center gap-1.5 px-4 transition bg-gray-100 hover:text-gray-900",
                                     onclick: |_| {
-                                        current_page.set(CurrentPage::Home);
+                                        *CURRENT_PAGE.write() = CurrentPage::Home;
                                     },
                                     to: Route::Home {},
                                     svg{ xmlns:"http://www.w3.org/2000/svg",
@@ -95,16 +87,30 @@ fn Body(cx: Scope) -> Element {
                                 span{ class:"absolute inset-y-0 -start-px h-10 w-4 bg-gray-100 [clip-path:_polygon(0_0,_0%_100%,_100%_50%)] rtl:rotate-180"},
                                 Link{ class:"flex h-10 items-center bg-white pe-4 ps-8 text-xs font-medium transition hover:text-gray-900",
                                     to: {
-                                        match current_page.get(){
+                                        match *CURRENT_PAGE.read(){
                                             CurrentPage::Home => Route::Home {},
                                             CurrentPage::Settings => Route::Settings {},
                                             _ => Route::Proofreading {}
                                         }
                                     },
-                                    current_page_str
+                                    {CURRENT_PAGE.read().to_string()}
                                 }
                             }
                         }
+                    }
+                    svg {class: "absolute right-6 lucide lucide-log-out",
+                        view_box: "0 0 24 24",
+                        xmlns: "http://www.w3.org/2000/svg",
+                        stroke: "currentColor",
+                        fill: "none",
+                        width: "24",
+                        stroke_linejoin: "round",
+                        stroke_linecap: "round",
+                        height: "24",
+                        stroke_width: "2",
+                        path { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" },
+                        polyline { points: "16 17 21 12 16 7" },
+                        line { x1: "21", y1: "12", x2: "9", y2: "12" }
                     }
                 }
             }
@@ -140,7 +146,7 @@ fn Body(cx: Scope) -> Element {
                                         li {
                                             Link { class: "block rounded-lg px-4 py-2 text-sm text-nowrap font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700",
                                                 onclick: |_| {
-                                                    current_page.set(CurrentPage::Proofreading);
+                                                    *CURRENT_PAGE.write() = CurrentPage::Proofreading;
                                                 },
                                                 to: Route::Proofreading {},
                                                 "文本纠错"
@@ -151,9 +157,9 @@ fn Body(cx: Scope) -> Element {
                             }
                             li { class: "bottom-0",
                                 Link { class: "flex flex-row rounded-lg px-4 py-2 text-sm text-nowrap font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700",
-                                    active_class: if CurrentPage::Settings.eq(current_page.get()) {"bg-gray-100 text-gray-700"} else {""},
+                                    active_class: if CurrentPage::Settings.eq(&CURRENT_PAGE.read()) {"bg-gray-100 text-gray-700"} else {""},
                                     onclick: |_| {
-                                        current_page.set(CurrentPage::Settings);
+                                        *CURRENT_PAGE.write() = CurrentPage::Settings;
                                     },
                                     to: Route::Settings {},
                                     svg { class: "h-5 w-5 mr-3 opacity-75",
@@ -187,6 +193,6 @@ fn Body(cx: Scope) -> Element {
         })
     } else {
         // 未登录
-        render!(Sign {})
+        rsx!(Sign {})
     }
 }

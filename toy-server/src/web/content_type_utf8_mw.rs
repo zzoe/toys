@@ -1,5 +1,7 @@
-use poem::http::{header, HeaderValue};
+use std::future::Future;
+
 use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
+use poem::http::{header, HeaderValue};
 
 #[derive(Default)]
 pub struct ContentTypeUtf8;
@@ -21,31 +23,33 @@ pub struct CTUtf8Endpoint<E> {
 impl<E: Endpoint> Endpoint for CTUtf8Endpoint<E> {
     type Output = Response;
 
-    async fn call(&self, req: Request) -> Result<Self::Output> {
-        let cache_control = cache_control(req.uri().path());
+    fn call(&self, req: Request) -> impl Future<Output = Result<Self::Output>> + Send {
+        async {
+            let cache_control = cache_control(req.uri().path());
 
-        match self.inner.call(req).await {
-            Ok(res) => {
-                let mut res = res.into_response();
+            match self.inner.call(req).await {
+                Ok(res) => {
+                    let mut res = res.into_response();
 
-                res.headers_mut().insert(
-                    "X-Content-Type-Options",
-                    HeaderValue::from_str("nosniff").unwrap(),
-                );
-                res.headers_mut().insert(
-                    "Cache-Control",
-                    HeaderValue::from_str(cache_control).unwrap(),
-                );
+                    res.headers_mut().insert(
+                        "X-Content-Type-Options",
+                        HeaderValue::from_str("nosniff").unwrap(),
+                    );
+                    res.headers_mut().insert(
+                        "Cache-Control",
+                        HeaderValue::from_str(cache_control).unwrap(),
+                    );
 
-                if let Some(ct) = res.header(header::CONTENT_TYPE) {
-                    if mime::IMAGE_SVG.eq(&ct) {
-                        let res = res.set_content_type("image/svg+xml; charset=utf-8");
-                        return Ok(res);
-                    }
-                };
-                Ok(res)
+                    if let Some(ct) = res.header(header::CONTENT_TYPE) {
+                        if mime::IMAGE_SVG.eq(&ct) {
+                            let res = res.set_content_type("image/svg+xml; charset=utf-8");
+                            return Ok(res);
+                        }
+                    };
+                    Ok(res)
+                }
+                Err(err) => Err(err),
             }
-            Err(err) => Err(err),
         }
     }
 }

@@ -38,7 +38,7 @@ mod web {
         console_error_panic_hook::set_once();
         tracing_wasm::set_as_global_default();
         toys::init();
-        dioxus_web::launch(App)
+        dioxus::launch(App)
     }
 }
 

@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
 use tracing::info;
 
-pub fn Home(cx: Scope) -> Element {
+pub fn Home() -> Element {
     info!("home");
-    render!(article {
+    rsx!(article {
         h1{
             "Home"
         }

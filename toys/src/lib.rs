@@ -2,7 +2,6 @@
 
 use dioxus::prelude::*;
 use dioxus_router::prelude::Router;
-use fermi::use_init_atom_root;
 use reqwest::{ClientBuilder, Url};
 
 use crate::service::{api_service, HTTP_CLIENT, HTTP_URL};
@@ -12,7 +11,7 @@ mod service;
 mod ui;
 
 pub fn init() {
-    const LOCAL_HOST: &str = "http://127.0.0.1:8080";
+    const LOCAL_HOST: &str = "https://127.0.0.1:8080";
     #[cfg(not(target_arch = "wasm32"))]
     {
         HTTP_CLIENT.get_or_init(|| ClientBuilder::new().cookie_store(true).build().unwrap());
@@ -29,11 +28,10 @@ pub fn init() {
     }
 }
 
-pub fn App(cx: Scope) -> Element {
-    let atoms = use_init_atom_root(cx);
-    let _api = use_coroutine(cx, |rx| api_service(rx, atoms.clone()));
+pub fn App() -> Element {
+    use_coroutine(api_service);
 
-    render!(Router::<ui::Route> {})
+    rsx!(Router::<ui::Route> {})
 }
 
 #[cfg(test)]

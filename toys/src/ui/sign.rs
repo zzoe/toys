@@ -1,12 +1,11 @@
 use dioxus::prelude::*;
-use fermi::{use_atom_state, Atom};
 
 use toy_schema::sign::SignReq;
 
 use crate::service::Api;
 
-pub static AUTHENTICATED: Atom<bool> = Atom(|_| false);
-pub static ALERT_MSG: Atom<AlertMsg> = Atom(|_| Default::default());
+pub static AUTHENTICATED: GlobalSignal<bool> = Signal::global(|| false);
+pub static ALERT_MSG: GlobalSignal<AlertMsg> = Signal::global(|| Default::default());
 
 #[derive(Default)]
 pub struct AlertMsg {
@@ -29,16 +28,15 @@ pub enum AlertType {
     Error,
 }
 
-pub fn Sign(cx: Scope) -> Element {
-    let sign_in = use_state(cx, || true);
-    let user_name = use_state(cx, || "".to_string());
-    let user_email = use_state(cx, || "".to_string());
-    let user_password = use_state(cx, || "".to_string());
-    let alter_msg = use_atom_state(cx, &ALERT_MSG);
-    let api = use_coroutine_handle::<Api>(cx).unwrap();
+pub fn Sign() -> Element {
+    let mut sign_in = use_signal(|| true);
+    let mut user_name = use_signal(|| "".to_string());
+    let mut user_email = use_signal(|| "".to_string());
+    let mut user_password = use_signal(|| "".to_string());
+    let api = use_coroutine_handle::<Api>();
     api.send(Api::SignCheck);
 
-    render!(
+    rsx!(
         div { class: "text-gray-800 antialiased",
             nav{class:"top-0 absolute z-50 w-full flex flex-wrap items-center justify-between px-2 py-3 ",
                 div{ class:"container px-4 mx-auto flex flex-wrap items-center justify-between",
@@ -58,15 +56,15 @@ pub fn Sign(cx: Scope) -> Element {
                     }
                     div{class: "mx-auto sm:w-3/4 md:w-2/4 fixed z-50 inset-x-0 top-10 rounded-xl border border-gray-100 bg-white p-4",
                         role: "alert",
-                        hidden: alter_msg.typ.is_none(),
+                        hidden: ALERT_MSG.read().typ.is_none(),
                         div{class: "flex items-start gap-4 text-red-600",
                             img{width: 24,src:"error.svg",alt:""}
                             div{class:"flex-1",
                                 strong{class:"block font-medium", "失败"}
-                                p{class:"mt-1 text-sm", alter_msg.msg.as_str()}
+                                p{class:"mt-1 text-sm", {ALERT_MSG.read().msg.as_str()}}
                             }
                             button{class:"text-gray-500 transition hover:text-gray-600",
-                                onclick: |_| alter_msg.set(Default::default()),
+                                onclick: |_| *ALERT_MSG.write() = Default::default(),
                                 svg{xmlns:"http://www.w3.org/2000/svg",
                                     fill: "none",
                                     view_box: "0 0 24 24",
@@ -88,7 +86,7 @@ pub fn Sign(cx: Scope) -> Element {
                                     div{class:"flex-auto px-4 py-6 lg:px-10",
                                         form{
                                             div{class:"relative w-full mb-3",
-                                                hidden: *sign_in.get(),
+                                                hidden: *sign_in.read(),
                                                 label{class:"block text-gray-700 text-xs font-bold mb-2",
                                                     r#for: "grid-password",
                                                     "姓名",
@@ -98,7 +96,7 @@ pub fn Sign(cx: Scope) -> Element {
                                                     r#type: "text",
                                                     placeholder: "姓名",
                                                     style:"transition: all 0.15s ease 0s;",
-                                                    onchange: move |evt| user_name.set(evt.value.clone()),
+                                                    onchange: move |evt| user_name.set(evt.value()),
                                                 }
                                             }
                                             div{class:"relative w-full mb-3",
@@ -111,7 +109,7 @@ pub fn Sign(cx: Scope) -> Element {
                                                     r#type: "email",
                                                     placeholder: "邮箱",
                                                     style:"transition: all 0.15s ease 0s;",
-                                                    onchange: move |evt| user_email.set(evt.value.clone()),
+                                                    onchange: move |evt| user_email.set(evt.value()),
                                                 }
                                             }
                                             div{class:"relative w-full mb-3",
@@ -125,7 +123,7 @@ pub fn Sign(cx: Scope) -> Element {
                                                     placeholder: "密码",
                                                     autocomplete: "off",
                                                     style:"transition: all 0.15s ease 0s;",
-                                                    onchange: move |evt| user_password.set(evt.value.clone()),
+                                                    onchange: move |evt| user_password.set(evt.value()),
                                                 }
                                             }
                                             div{class:"text-center mt-6 mb-3",
@@ -133,8 +131,8 @@ pub fn Sign(cx: Scope) -> Element {
                                                     style: "transition: all 0.15s ease 0s;",
                                                     id: "button-submit",
                                                     r#type: "submit",
-                                                    onclick: |_|{
-                                                        if *sign_in.get(){
+                                                    onclick: move |_|{
+                                                        if *sign_in.read(){
                                                             api.send(Api::SignIn(SignReq{
                                                                 name: user_name.to_string(),
                                                                 email: user_email.to_string(),
@@ -148,7 +146,7 @@ pub fn Sign(cx: Scope) -> Element {
                                                             }));
                                                         }
                                                     },
-                                                    if *sign_in.get(){
+                                                    if *sign_in.read(){
                                                         "登录"
                                                     }else {
                                                         "注册"
@@ -158,8 +156,8 @@ pub fn Sign(cx: Scope) -> Element {
                                             div{class:"flex flex-wrap",
                                                 a{ class: "text-xs cursor-pointer",
                                                     style: "color: lightslategray;",
-                                                    onclick: |_| sign_in.set(!*sign_in.get()),
-                                                    if !*sign_in.get(){
+                                                    onclick: move |_| *sign_in.write() = !sign_in(),
+                                                    if !*sign_in.read(){
                                                         "已有账号，立即登录"
                                                     }else {
                                                         "尚无账号，立即注册"

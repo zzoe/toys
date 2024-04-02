@@ -1,8 +1,8 @@
+use poem::{Endpoint, handler, Middleware, Request};
 use poem::session::Session;
 use poem::web::Json;
-use poem::{handler, Endpoint, Middleware, Request};
 use surrealdb::opt::auth::{Jwt, Scope};
-use tracing::{info, warn};
+use tracing::{debug, warn};
 
 use toy_schema::sign::SignReq;
 
@@ -12,7 +12,7 @@ use crate::web::database;
 
 #[handler]
 pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
-    info!("sign_up session: {session:#?}");
+    debug!("sign_up session: {session:#?}");
     if session.get::<Jwt>("token").is_some() {
         session.renew();
         // return Err(poem::error::BadRequest(DoNotRepeat));
@@ -35,7 +35,7 @@ pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result
 
 #[handler]
 pub async fn sign_in(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
-    info!("sign_in session: {session:#?}");
+    debug!("sign_in session: {session:#?}");
     if session.get::<Jwt>("token").is_some() {
         session.renew();
     }
@@ -57,7 +57,7 @@ pub async fn sign_in(sign_req: Json<SignReq>, session: &Session) -> poem::Result
 
 #[handler]
 pub async fn sign_check(session: &Session) -> poem::Result<String> {
-    info!("sign_check session: {session:#?}");
+    debug!("sign_check session: {session:#?}");
     let Some(token) = session.get::<Jwt>("token") else {
         warn!("session已失效，未获取到数据库token");
         session.purge();
@@ -82,6 +82,12 @@ pub async fn sign_check(session: &Session) -> poem::Result<String> {
     Ok("已登录".to_string())
 }
 
+#[handler]
+pub async fn logout(session: &Session) -> poem::Result<String> {
+    session.purge();
+    Ok("已登出".to_string())
+}
+
 pub struct Auth {}
 
 impl<E: Endpoint> Middleware<E> for Auth {
@@ -96,7 +102,6 @@ pub struct AuthEndpoint<E> {
     ep: E,
 }
 
-#[poem::async_trait]
 impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
     type Output = E::Output;
 
