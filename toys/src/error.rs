@@ -6,6 +6,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("transparent")]
     HttpError(#[from] reqwest::Error),
+    #[error("speedy序列化失败: {0}")]
+    ParseError(#[from] speedy::Error),
     #[error("响应失败: {status}-{msg}")]
     ResponseError { status: StatusCode, msg: String },
     #[error("系统异常")]

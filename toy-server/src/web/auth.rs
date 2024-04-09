@@ -1,24 +1,22 @@
-use poem::{Endpoint, handler, Middleware, Request};
 use poem::session::Session;
-use poem::web::Json;
+use poem::{handler, Endpoint, Middleware, Request};
 use surrealdb::opt::auth::{Jwt, Scope};
 use tracing::{debug, warn};
 
 use toy_schema::sign::SignReq;
 
-use crate::error::Error::{SignInFail, SignUpFail, UnAuthenticated, UnAuthorized};
-use crate::error::ErrorConv;
+use crate::error::Error;
 use crate::web::database;
+use crate::web::speedy_data::Speedy;
 
 #[handler]
-pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
+pub async fn sign_up(sign_req: Speedy<SignReq>, session: &Session) -> poem::Result<String> {
     debug!("sign_up session: {session:#?}");
     if session.get::<Jwt>("token").is_some() {
         session.renew();
-        // return Err(poem::error::BadRequest(DoNotRepeat));
     }
 
-    let db = database::connect().await.internal_server_error()?;
+    let db = database::connect().await.map_err(Error::DbException)?;
     let credentials = Scope {
         namespace: "toy",
         database: "toy",
@@ -26,7 +24,10 @@ pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result
         params: sign_req.0,
     };
 
-    let token: Jwt = db.signup(credentials).await.bad_request(SignUpFail)?;
+    let token: Jwt = db
+        .signup(credentials)
+        .await
+        .map_err(|_| Error::SignUpFail)?;
 
     session.set("token", token);
 
@@ -34,13 +35,13 @@ pub async fn sign_up(sign_req: Json<SignReq>, session: &Session) -> poem::Result
 }
 
 #[handler]
-pub async fn sign_in(sign_req: Json<SignReq>, session: &Session) -> poem::Result<String> {
+pub async fn sign_in(sign_req: Speedy<SignReq>, session: &Session) -> poem::Result<String> {
     debug!("sign_in session: {session:#?}");
     if session.get::<Jwt>("token").is_some() {
         session.renew();
     }
 
-    let db = database::connect().await.internal_server_error()?;
+    let db = database::connect().await.map_err(Error::DbException)?;
     let credentials = Scope {
         namespace: "toy",
         database: "toy",
@@ -48,7 +49,10 @@ pub async fn sign_in(sign_req: Json<SignReq>, session: &Session) -> poem::Result
         params: sign_req.0,
     };
 
-    let token: Jwt = db.signin(credentials).await.bad_request(SignInFail)?;
+    let token: Jwt = db
+        .signin(credentials)
+        .await
+        .map_err(|_| Error::SignInFail)?;
 
     session.set("token", token);
 
@@ -61,7 +65,7 @@ pub async fn sign_check(session: &Session) -> poem::Result<String> {
     let Some(token) = session.get::<Jwt>("token") else {
         warn!("session已失效，未获取到数据库token");
         session.purge();
-        return Err(poem::error::Unauthorized(UnAuthenticated));
+        return Err(Error::UnAuthenticated.into());
     };
 
     let db = match database::connect().await {
@@ -69,14 +73,14 @@ pub async fn sign_check(session: &Session) -> poem::Result<String> {
         Err(e) => {
             warn!("数据库连接失败：{e}");
             session.purge();
-            return Err(poem::error::Unauthorized(UnAuthenticated));
+            return Err(Error::UnAuthenticated.into());
         }
     };
 
     if let Err(e) = db.authenticate(token).await {
         warn!("数据库token验证失败：{e}");
         session.purge();
-        return Err(poem::error::Unauthorized(UnAuthenticated));
+        return Err(Error::UnAuthenticated.into());
     }
 
     Ok("已登录".to_string())
@@ -108,19 +112,19 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
     async fn call(&self, mut req: Request) -> poem::Result<Self::Output> {
         // 从req取session
         let Some(session) = req.extensions().get::<Session>() else {
-            return Err(poem::error::Unauthorized(UnAuthorized));
+            return Err(Error::UnAuthenticated.into());
         };
 
         // 从session取token
         let Some(token) = session.get::<Jwt>("token") else {
-            return Err(poem::error::Unauthorized(UnAuthorized));
+            return Err(Error::UnAuthenticated.into());
         };
 
         // 创建数据连接
-        let db = database::connect().await.internal_server_error()?;
+        let db = database::connect().await.map_err(Error::DbException)?;
 
         // 数据库用户认证
-        db.authenticate(token).await.unauthorized()?;
+        db.authenticate(token).await.map_err(Error::DbException)?;
 
         // 保存数据库连接到req
         req.extensions_mut().insert(db);

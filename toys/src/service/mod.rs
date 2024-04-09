@@ -4,12 +4,12 @@ use bytes::Bytes;
 use dioxus::prelude::*;
 use futures_util::stream::StreamExt;
 use reqwest::{Client, Method, StatusCode, Url};
-use serde::Serialize;
+use speedy::{LittleEndian, Writable};
 
 use toy_schema::sign::SignReq;
 
 use crate::error::Error::ResponseError;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::ui::sign::AUTHENTICATED;
 
 pub static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
@@ -36,7 +36,7 @@ pub async fn api_service(mut rx: UnboundedReceiver<Api>) {
     }
 }
 
-pub async fn http<Req: Serialize>(
+pub async fn http<Req: Writable<LittleEndian>>(
     method: Method,
     path: &str,
     request: Option<&Req>,
@@ -46,7 +46,10 @@ pub async fn http<Req: Serialize>(
 
     // 发送请求
     let res = match request {
-        Some(req) => client.request(method, url).json(req).send().await?,
+        Some(req) => {
+            let body = req.write_to_vec().map_err(Error::ParseError)?;
+            client.request(method, url).body(body).send().await?
+        }
         None => client.request(method, url).send().await?,
     };
 

@@ -8,23 +8,24 @@ edition = "2021"
 
 [dependencies]
 bytes = { version = "*" }
-dioxus = { version = "*" }
 dioxus-router = { version = "*" }
 futures-util = { version = "*" }
-reqwest = { version = "*", features = ["cookies", "json"] }
-serde = { version = "*", features = ["derive"] }
+reqwest = { version = "*", features = ["cookies"] }
+speedy = { version = "*" }
 strum = { version = "*", features = ["derive"] }
 thiserror = { version = "*" }
 toy-schema = { path = "../toy-schema" }
 tracing = { version = "*" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dioxus = { version = "*", features = ["desktop"] }
 dioxus-desktop = { version = "*" }
 time = { version = "*" }
 tracing-subscriber = { version = "*", features = ["local-time"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = { version = "*" }
+dioxus = { version = "*", features = ["web"] }
 dioxus-web = { version = "*" }
 tracing-wasm = { version = "*" }
 web-sys = { version = "*" }

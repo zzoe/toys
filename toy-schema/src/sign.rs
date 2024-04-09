@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use speedy::{Readable, Writable};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Readable, Writable, Serialize, Deserialize)]
 pub struct SignReq {
-    #[serde(default)]
+    #[speedy(default_on_eof)]
     pub name: String,
     pub email: String,
     pub password: String,

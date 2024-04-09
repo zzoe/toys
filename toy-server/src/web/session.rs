@@ -2,13 +2,13 @@ use std::collections::BTreeMap;
 use std::future::Future;
 use std::time::Duration;
 
+use crate::error::Error;
 use poem::session::SessionStorage;
 use serde_json::Value;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
 use tracing::{debug, info};
 
-use crate::error::ErrorConv;
 use crate::web::database;
 use crate::web::database::ROOT_CREDENTIALS;
 
@@ -62,7 +62,8 @@ impl SessionStorage for SurrealStorage {
                     res.remove("id");
                     Ok(Some(res))
                 }
-                o => o.internal_server_error(),
+                Ok(None) => Err(Error::UnAuthenticated.into()),
+                Err(e) => Err(Error::DbException(e).into()),
             }
         }
     }
@@ -81,7 +82,7 @@ impl SessionStorage for SurrealStorage {
                 .content(entries)
                 .await
                 .map(|_| ())
-                .internal_server_error()
+                .map_err(|e| Error::DbException(e).into())
         }
     }
 
@@ -95,7 +96,7 @@ impl SessionStorage for SurrealStorage {
                 .delete::<Option<BTreeMap<String, Value>>>(("session", session_id))
                 .await
                 .map(|_| ())
-                .internal_server_error()
+                .map_err(|e| Error::DbException(e).into())
         }
     }
 }

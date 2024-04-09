@@ -19,6 +19,8 @@ pub(crate) mod auth;
 mod content_type_utf8_mw;
 pub(crate) mod database;
 pub(crate) mod session;
+pub(crate) mod speedy_data;
+pub(crate) mod sudoku;
 
 pub(crate) async fn start(signal: impl Future<Output = ()>) {
     let cfg = GLOBAL_CONFIG
@@ -59,18 +61,13 @@ pub(crate) async fn start(signal: impl Future<Output = ()>) {
     }
 }
 
-#[handler]
-async fn reload() {
-    config::reload();
-}
-
 async fn apis() -> impl IntoEndpoint {
     Route::new()
         .at("/sign_up", post(sign_up))
         .at("/sign_in", post(sign_in))
         .at("/sign_check", post(sign_check))
         .at("/logout", post(sign_check))
-        .nest("/auth", need_auth())
+        .nest("/", need_auth())
         .with(ServerSession::new(
             CookieConfig::default().secure(false),
             SurrealStorage::new().await.expect("Session数据库异常"),
@@ -78,4 +75,9 @@ async fn apis() -> impl IntoEndpoint {
 }
 fn need_auth() -> impl IntoEndpoint {
     Route::new().at("/reload", post(reload)).with(Auth {})
+}
+
+#[handler]
+async fn reload() {
+    config::reload();
 }
