@@ -53,8 +53,9 @@ fn is_octet_stream(content_type: &str) -> bool {
             .map_or(false, |v| v == "octet-stream")))
 }
 
-impl<T: Writable<Endianness> + Send> IntoResponse for Speedy<T> {
+impl<T: Debug + Writable<Endianness> + Send> IntoResponse for Speedy<T> {
     fn into_response(self) -> Response {
+        info!("Body序列化开始：{:?}", self.0);
         let data = match self.0.write_to_vec_with_ctx(Endianness::LittleEndian) {
             Ok(data) => data,
             Err(err) => {

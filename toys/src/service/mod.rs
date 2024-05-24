@@ -48,7 +48,12 @@ pub async fn http<Req: Writable<LittleEndian>>(
     let res = match request {
         Some(req) => {
             let body = req.write_to_vec().map_err(Error::ParseError)?;
-            client.request(method, url).body(body).send().await?
+            client
+                .request(method, url)
+                .header("content-type", "application/octet-stream")
+                .body(body)
+                .send()
+                .await?
         }
         None => client.request(method, url).send().await?,
     };

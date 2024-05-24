@@ -91,7 +91,7 @@ impl SessionStorage for SurrealStorage {
         session_id: &'a str,
     ) -> impl Future<Output = poem::Result<()>> + Send + 'a {
         async move {
-            debug!("remove session {session_id}");
+            info!("remove session {session_id}");
             self.db
                 .delete::<Option<BTreeMap<String, Value>>>(("session", session_id))
                 .await

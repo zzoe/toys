@@ -20,7 +20,7 @@ mod content_type_utf8_mw;
 pub(crate) mod database;
 pub(crate) mod session;
 pub(crate) mod speedy_data;
-pub(crate) mod sudoku;
+mod sudoku;
 
 pub(crate) async fn start(signal: impl Future<Output = ()>) {
     let cfg = GLOBAL_CONFIG
@@ -74,7 +74,10 @@ async fn apis() -> impl IntoEndpoint {
         ))
 }
 fn need_auth() -> impl IntoEndpoint {
-    Route::new().at("/reload", post(reload)).with(Auth {})
+    Route::new()
+        .at("/reload", post(reload))
+        .at("/sudoku", post(sudoku::resolve))
+        .with(Auth {})
 }
 
 #[handler]

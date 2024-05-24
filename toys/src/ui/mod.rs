@@ -6,11 +6,13 @@ use crate::ui::config::Settings;
 use crate::ui::home::Home;
 use crate::ui::proofreading::Proofreading;
 use crate::ui::sign::{Sign, AUTHENTICATED};
+use crate::ui::sudoku::Sudoku;
 
 pub(crate) mod config;
 pub(crate) mod home;
 pub(crate) mod proofreading;
 pub(crate) mod sign;
+mod sudoku;
 
 pub static CURRENT_PAGE: GlobalSignal<CurrentPage> = Signal::global(|| CurrentPage::Home);
 
@@ -20,6 +22,8 @@ pub enum Route {
   #[layout(Body)]
     #[route("/")]
     Home {},
+    #[route("/sudoku")]
+    Sudoku {},
     #[route("/proofreading")]
     Proofreading {},
     #[route("/settings")]
@@ -30,6 +34,8 @@ pub enum Route {
 pub enum CurrentPage {
     #[strum(serialize = "")]
     Home,
+    #[strum(serialize = "数独")]
+    Sudoku,
     #[strum(serialize = "中文校对-文本纠错")]
     Proofreading,
     #[strum(serialize = "设置")]
@@ -85,14 +91,14 @@ fn Body() -> Element {
                             }
                             li{ class:"relative flex items-center {nav_hidden_css}",
                                 span{ class:"absolute inset-y-0 -start-px h-10 w-4 bg-gray-100 [clip-path:_polygon(0_0,_0%_100%,_100%_50%)] rtl:rotate-180"},
-                                Link{ class:"flex h-10 items-center bg-white pe-4 ps-8 text-xs font-medium transition hover:text-gray-900",
-                                    to: {
-                                        match *CURRENT_PAGE.read(){
-                                            CurrentPage::Home => Route::Home {},
-                                            CurrentPage::Settings => Route::Settings {},
-                                            _ => Route::Proofreading {}
-                                        }
-                                    },
+                                a{ class:"flex h-10 items-center bg-white pe-4 ps-8 text-xs font-medium transition hover:text-gray-900",
+                                    // to: {
+                                    //     match *CURRENT_PAGE.read(){
+                                    //         CurrentPage::Home => Route::Home {},
+                                    //         CurrentPage::Settings => Route::Settings {},
+                                    //         _ => Route::Proofreading {}
+                                    //     }
+                                    // },
                                     {CURRENT_PAGE.read().to_string()}
                                 }
                             }

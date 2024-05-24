@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
 
 use toy_schema::sign::SignReq;
+use tracing::info;
 
 use crate::service::Api;
 
 pub static AUTHENTICATED: GlobalSignal<bool> = Signal::global(|| false);
-pub static ALERT_MSG: GlobalSignal<AlertMsg> = Signal::global(|| Default::default());
+pub static ALERT_MSG: GlobalSignal<AlertMsg> = Signal::global(Default::default);
 
 #[derive(Default)]
 pub struct AlertMsg {
@@ -84,7 +85,7 @@ pub fn Sign() -> Element {
                             div{ class:"w-full lg:w-6/12 px-4",
                                 div{ class:"relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-gray-300 border-0",
                                     div{class:"flex-auto px-4 py-6 lg:px-10",
-                                        form{
+                                        // form{
                                             div{class:"relative w-full mb-3",
                                                 hidden: *sign_in.read(),
                                                 label{class:"block text-gray-700 text-xs font-bold mb-2",
@@ -127,11 +128,13 @@ pub fn Sign() -> Element {
                                                 }
                                             }
                                             div{class:"text-center mt-6 mb-3",
-                                                input{ class: "bg-gray-900 text-white active:bg-gray-700 text-sm font-bold px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full",
+                                                button{ class:"btn btn-primary btn-wide",
+                                                // class: "bg-gray-900 text-white active:bg-gray-700 text-sm font-bold px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full",
                                                     style: "transition: all 0.15s ease 0s;",
                                                     id: "button-submit",
-                                                    r#type: "submit",
+                                                    // r#type: "submit",
                                                     onclick: move |_|{
+                                                        info!("登录/注册");
                                                         if *sign_in.read(){
                                                             api.send(Api::SignIn(SignReq{
                                                                 name: user_name.to_string(),
@@ -164,7 +167,7 @@ pub fn Sign() -> Element {
                                                     },
                                                 }
                                             }
-                                        }
+                                        // }
                                     }
                                 }
                             }
