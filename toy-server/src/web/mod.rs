@@ -10,7 +10,7 @@ use poem::session::{CookieConfig, ServerSession};
 use poem::{handler, post, EndpointExt, IntoEndpoint, Route, Server};
 
 use crate::config;
-use crate::web::auth::{sign_check, sign_in, sign_up, Auth};
+use crate::web::auth::{logout, sign_check, sign_in, sign_up, Auth};
 use crate::web::content_type_utf8_mw::ContentTypeUtf8;
 use crate::web::session::SurrealStorage;
 use crate::GLOBAL_CONFIG;
@@ -66,15 +66,15 @@ async fn apis() -> impl IntoEndpoint {
         .at("/sign_up", post(sign_up))
         .at("/sign_in", post(sign_in))
         .at("/sign_check", post(sign_check))
-        .at("/logout", post(sign_check))
         .nest("/", need_auth())
         .with(ServerSession::new(
-            CookieConfig::default().secure(false),
+            CookieConfig::default(),
             SurrealStorage::new().await.expect("Session数据库异常"),
         ))
 }
 fn need_auth() -> impl IntoEndpoint {
     Route::new()
+        .at("/logout", post(logout))
         .at("/reload", post(reload))
         .at("/sudoku", post(sudoku::resolve))
         .with(Auth {})

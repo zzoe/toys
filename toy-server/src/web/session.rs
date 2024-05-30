@@ -62,7 +62,7 @@ impl SessionStorage for SurrealStorage {
                     res.remove("id");
                     Ok(Some(res))
                 }
-                Ok(None) => Err(Error::UnAuthenticated.into()),
+                Ok(None) => Ok(None),
                 Err(e) => Err(Error::DbException(e).into()),
             }
         }

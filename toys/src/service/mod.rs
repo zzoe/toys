@@ -22,6 +22,7 @@ pub enum Api {
     SignUp(SignReq),
     SignIn(SignReq),
     SignCheck,
+    Logout,
     ConfigReload,
 }
 
@@ -31,6 +32,7 @@ pub async fn api_service(mut rx: UnboundedReceiver<Api>) {
             Api::SignUp(req) => sign::sign_up(req).await,
             Api::SignIn(req) => sign::sign_in(req).await,
             Api::SignCheck => sign::sign_check().await,
+            Api::Logout => sign::logout().await,
             Api::ConfigReload => config::reload().await,
         }
     }

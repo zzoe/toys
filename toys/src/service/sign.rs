@@ -1,10 +1,10 @@
 use reqwest::Method;
-use tracing::error;
+use tracing::{error, info};
 
 use toy_schema::sign::SignReq;
 
 use crate::service::http;
-use crate::ui::sign::{ALERT_MSG, AlertMsg, AlertType, AUTHENTICATED};
+use crate::ui::sign::{AlertMsg, AlertType, ALERT_MSG, AUTHENTICATED};
 
 pub async fn sign_up(req: SignReq) {
     if let Err(e) = http(Method::POST, "/api/sign_up", Some(&req)).await {
@@ -30,5 +30,14 @@ pub async fn sign_check() {
         .is_ok()
     {
         *AUTHENTICATED.write() = true;
+    }
+}
+
+pub async fn logout() {
+    *AUTHENTICATED.write() = false;
+    if let Err(e) = http::<()>(Method::POST, "/api/logout", None).await {
+        error!("登出失败： {e}");
+    } else {
+        info!("登出成功！")
     }
 }

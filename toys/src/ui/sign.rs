@@ -128,7 +128,7 @@ pub fn Sign() -> Element {
                                                 }
                                             }
                                             div{class:"text-center mt-6 mb-3",
-                                                button{ class:"btn btn-primary btn-wide",
+                                                button{ class:"btn btn-wide btn-outline",
                                                 // class: "bg-gray-900 text-white active:bg-gray-700 text-sm font-bold px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full",
                                                     style: "transition: all 0.15s ease 0s;",
                                                     id: "button-submit",
