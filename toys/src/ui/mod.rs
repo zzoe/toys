@@ -23,7 +23,7 @@ pub enum Route {
   #[layout(Body)]
     #[route("/")]
     //  if the current location doesn't match any of the other routes, redirect to "/home"
-    #[redirect("/:..segments", |segments: Vec<String>| Route::Home {})]
+    #[redirect("/:.._s", |_s: Vec<String>| Route::Home {})]
     Home {},
     #[route("/sudoku")]
     Sudoku {},

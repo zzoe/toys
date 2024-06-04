@@ -1,10 +1,9 @@
 use std::sync::OnceLock;
 
-use bytes::Bytes;
 use dioxus::prelude::*;
 use futures_util::stream::StreamExt;
 use reqwest::{Client, Method, StatusCode, Url};
-use speedy::{LittleEndian, Writable};
+use speedy::{LittleEndian, Readable, Writable};
 
 use toy_schema::sign::SignReq;
 
@@ -38,11 +37,11 @@ pub async fn api_service(mut rx: UnboundedReceiver<Api>) {
     }
 }
 
-pub async fn http<Req: Writable<LittleEndian>>(
+pub async fn http<'a, Req: Writable<LittleEndian>, Res: Readable<'a, LittleEndian>>(
     method: Method,
     path: &str,
     request: Option<&Req>,
-) -> Result<Bytes> {
+) -> Result<Res> {
     let client = HTTP_CLIENT.get().unwrap();
     let url = HTTP_URL.get().and_then(|u| u.join(path).ok()).unwrap();
 
@@ -61,17 +60,14 @@ pub async fn http<Req: Writable<LittleEndian>>(
     };
 
     let status = res.status();
-    let msg = res.bytes().await?;
+    let msg = Res::read_from_buffer_copying_data(&res.bytes().await?)?;
 
     if !status.is_success() {
         if StatusCode::UNAUTHORIZED.eq(&status) {
             *AUTHENTICATED.write() = false;
         }
 
-        return Err(ResponseError {
-            status,
-            msg: String::from_utf8_lossy(&msg).to_string(),
-        });
+        return Err(ResponseError { status });
     }
 
     Ok(msg)

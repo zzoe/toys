@@ -8,8 +8,8 @@ pub enum Error {
     HttpError(#[from] reqwest::Error),
     #[error("speedy序列化失败: {0}")]
     ParseError(#[from] speedy::Error),
-    #[error("响应失败: {status}-{msg}")]
-    ResponseError { status: StatusCode, msg: String },
+    #[error("响应失败: {status}")]
+    ResponseError { status: StatusCode },
     #[error("系统异常")]
     ServerException,
 }

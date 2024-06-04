@@ -40,7 +40,7 @@ impl ResponseError for Error {
             Error::InternalServerErr => StatusCode::INTERNAL_SERVER_ERROR,
             Error::SignUpFail => StatusCode::UNAUTHORIZED,
             Error::SignInFail => StatusCode::UNAUTHORIZED,
-            Error::UnAuthenticated => StatusCode::BAD_REQUEST,
+            Error::UnAuthenticated => StatusCode::UNAUTHORIZED,
             Error::UnAuthorized => StatusCode::UNAUTHORIZED,
             Error::DbException(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::InvalidContentType(_) => StatusCode::UNSUPPORTED_MEDIA_TYPE,
