@@ -19,7 +19,7 @@ const ONE_NUM: [u16; 9] = [
     0b1_0000_0000,
 ];
 
-const ALL_CONDITION: u16 = 0b1_1111_1111;
+const ALL_CONDITION: u16 = 0b111_111_111;
 
 #[derive(Copy, Clone, Readable, Writable)]
 struct Sudoku([u16; 81]);
@@ -47,6 +47,7 @@ impl DerefMut for Sudoku {
 
 impl Display for Sudoku {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f)?;
         for i in 0..9 {
             if i == 3 || i == 6 {
                 writeln!(f, "------|-------|------")?;

@@ -16,6 +16,7 @@ pub static HTTP_URL: OnceLock<Url> = OnceLock::new();
 
 mod config;
 mod sign;
+mod sudoku;
 
 pub enum Api {
     SignUp(SignReq),
@@ -23,6 +24,7 @@ pub enum Api {
     SignCheck,
     Logout,
     ConfigReload,
+    Sudoku([u16; 81]),
 }
 
 pub async fn api_service(mut rx: UnboundedReceiver<Api>) {
@@ -33,6 +35,7 @@ pub async fn api_service(mut rx: UnboundedReceiver<Api>) {
             Api::SignCheck => sign::sign_check().await,
             Api::Logout => sign::logout().await,
             Api::ConfigReload => config::reload().await,
+            Api::Sudoku(req) => sudoku::sudoku(req).await,
         }
     }
 }

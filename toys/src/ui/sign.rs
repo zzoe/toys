@@ -29,6 +29,7 @@ pub enum AlertType {
     Error,
 }
 
+#[component]
 pub fn Sign() -> Element {
     let mut sign_in = use_signal(|| true);
     let mut user_name = use_signal(|| "".to_string());

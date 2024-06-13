@@ -13,7 +13,7 @@ pub(crate) mod config;
 pub(crate) mod home;
 pub(crate) mod proofreading;
 pub(crate) mod sign;
-mod sudoku;
+pub(crate) mod sudoku;
 
 pub static CURRENT_PAGE: GlobalSignal<CurrentPage> = Signal::global(|| CurrentPage::Home);
 
@@ -105,7 +105,7 @@ fn Body() -> Element {
                         onclick: move |_| {
                             api.send(Api::Logout);
                         },
-                        svg {class: "lucide lucide-log-out",
+                        svg{
                             view_box: "0 0 24 24",
                             xmlns: "http://www.w3.org/2000/svg",
                             stroke: "currentColor",

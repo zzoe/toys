@@ -25,7 +25,7 @@ tracing-subscriber = { version = "*", features = ["local-time"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = { version = "*" }
-dioxus = { version = "*", features = ["web"] }
+dioxus = { version = "*", features = ["web", "html"] }
 dioxus-web = { version = "*" }
 tracing-wasm = { version = "*" }
 web-sys = { version = "*" }

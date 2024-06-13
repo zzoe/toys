@@ -5,6 +5,7 @@ use crate::service::Api;
 
 pub static SETTINGS_BTN_DISABLE: GlobalSignal<bool> = Signal::global(|| false);
 
+#[component]
 pub fn Settings() -> Element {
     let api = use_coroutine_handle::<Api>();
 

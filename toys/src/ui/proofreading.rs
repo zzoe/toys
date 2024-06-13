@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 #[derive(Default)]
 pub struct InputText(String);
 
+#[component]
 pub fn Proofreading() -> Element {
     let mut input_text = use_context_provider(|| Signal::new(InputText::default()));
 
