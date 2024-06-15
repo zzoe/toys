@@ -8,8 +8,8 @@ pub enum Error {
     InternalServerErr,
     #[error("请登录后再试")]
     UnAuthenticated,
-    #[error("您无此功能权限")]
-    UnAuthorized,
+    // #[error("您无此功能权限")]
+    // UnAuthorized,
     #[error("数据库异常")]
     DbException(#[from] surrealdb::Error),
 
@@ -32,6 +32,10 @@ pub enum Error {
 
     #[error("数独游戏数字异常: {0}")]
     SudokuNumInvalid(u16),
+    #[error("数独游戏第{0}行第{1}列不能填充{2}")]
+    SudokuNumErr(u16, u16, u16),
+    #[error("数独无解")]
+    SudokuUnsolvable,
 }
 
 impl ResponseError for Error {
@@ -41,12 +45,14 @@ impl ResponseError for Error {
             Error::SignUpFail => StatusCode::UNAUTHORIZED,
             Error::SignInFail => StatusCode::UNAUTHORIZED,
             Error::UnAuthenticated => StatusCode::UNAUTHORIZED,
-            Error::UnAuthorized => StatusCode::UNAUTHORIZED,
+            // Error::UnAuthorized => StatusCode::UNAUTHORIZED,
             Error::DbException(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::InvalidContentType(_) => StatusCode::UNSUPPORTED_MEDIA_TYPE,
             Error::ContentTypeRequired => StatusCode::UNSUPPORTED_MEDIA_TYPE,
             Error::Parse(_) => StatusCode::BAD_REQUEST,
             Error::SudokuNumInvalid(_) => StatusCode::BAD_REQUEST,
+            Error::SudokuNumErr(_, _, _) => StatusCode::BAD_REQUEST,
+            Error::SudokuUnsolvable => StatusCode::BAD_REQUEST,
         }
     }
 }

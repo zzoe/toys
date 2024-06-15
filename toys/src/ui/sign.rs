@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
+use tracing::info;
 
 use toy_schema::sign::SignReq;
-use tracing::info;
 
 use crate::service::Api;
 

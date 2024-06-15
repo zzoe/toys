@@ -2,13 +2,13 @@ use std::collections::BTreeMap;
 use std::future::Future;
 use std::time::Duration;
 
-use crate::error::Error;
 use poem::session::SessionStorage;
 use serde_json::Value;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
-use tracing::{debug, info};
+use tracing::info;
 
+use crate::error::Error;
 use crate::web::database;
 use crate::web::database::ROOT_CREDENTIALS;
 

@@ -1,8 +1,8 @@
-use crate::service::Api;
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 use strum::{Display, IntoStaticStr};
 
+use crate::service::Api;
 use crate::ui::config::Settings;
 use crate::ui::home::Home;
 use crate::ui::proofreading::Proofreading;

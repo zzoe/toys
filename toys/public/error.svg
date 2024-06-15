@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg"
-        fill= "none"
-        viewBox= "0 0 24 24"
-        stroke-width= "2"
-        stroke="red"
-        class="h-6 w-6">
-    <circle cx="12" cy="12" r="10" />
+     fill="none"
+     viewBox="0 0 24 24"
+     stroke-width="2"
+     stroke="red"
+     class="h-6 w-6">
+    <circle cx="12" cy="12" r="10"/>
     <text x="7" y="17" stroke-width="1">×</text>
 </svg>

@@ -10,6 +10,7 @@ arc-swap = { version = "*" }
 async-std = { version = "*", features = ["tokio1"] }
 async-trait = { version = "*" }
 ctrlc = { version = "*" }
+indextree = { version = "*" }
 mime = { version = "*" }
 toml = { version = "*" }
 poem = { version = "*", features = ["anyhow", "compression", "session", "static-files", "rustls", "test"] }

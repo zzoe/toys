@@ -1,7 +1,7 @@
 use std::future::Future;
 
-use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
 use poem::http::{header, HeaderValue};
+use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
 
 #[derive(Default)]
 pub struct ContentTypeUtf8;

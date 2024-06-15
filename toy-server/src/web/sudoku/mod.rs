@@ -3,9 +3,13 @@ use std::ops::{Deref, DerefMut};
 
 use poem::{handler, Result};
 use speedy::{Readable, Writable};
+use tracing::info;
 
 use crate::error::Error;
+use crate::error::Error::{SudokuNumErr, SudokuUnsolvable};
 use crate::web::speedy_data::Speedy;
+
+mod traversal;
 
 const ONE_NUM: [u16; 9] = [
     0b1,
@@ -66,28 +70,43 @@ impl Display for Sudoku {
 
 impl Sudoku {
     // 填充数字
-    fn input(&mut self, i: usize, num: u16) {
+    fn input(&mut self, i: usize, num: u16) -> Result<()> {
         assert!(num > 0 && num < 10);
         // 行列号
         let row = i / 9;
         let col = i % 9;
 
+        if self[i] & (1 << (num - 1)) != (1 << (num - 1)) {
+            return Err(SudokuNumErr(row as u16 + 1, col as u16 + 1, num).into());
+        }
+
         // 填充自身 0-8位代表每个数字1-9的可能性，第9位之上存储具体的值
         self[i] = (num << 9) | (1 << (num - 1));
-        tracing::debug!("{self}");
+        tracing::debug!("第{}行第{}列，填充{num}", row + 1, col + 1);
 
         for j in 0..9 {
-            // 更新同一行中的第j个
-            self.update(row * 9 + j, num);
-            // 更新同一列中的第j个
-            self.update(j * 9 + col, num);
-            // 更新同一块中的第j个
-            self.update((row / 3 * 3 + j / 3) * 9 + col / 3 * 3 + j % 3, num);
+            // 排除同一行中的第j个
+            self.exclude(row * 9 + j, num)?;
+            // 排除同一列中的第j个
+            self.exclude(j * 9 + col, num)?;
+            // 排除同一块中的第j个
+            self.exclude((row / 3 * 3 + j / 3) * 9 + col / 3 * 3 + j % 3, num)?;
         }
+
+        for k in 0..9 {
+            // 更新同一行中的第k个
+            self.update(row * 9 + k)?;
+            // 更新同一列中的第k个
+            self.update(k * 9 + col)?;
+            // 更新同一块中的第k个
+            self.update((row / 3 * 3 + k / 3) * 9 + col / 3 * 3 + k % 3)?;
+        }
+
+        Ok(())
     }
 
     // 检查同一行/列/块中，某个数字只有一个可能性的情况，并填充之
-    fn check_only(&mut self, groups: [[usize; 9]; 9]) -> bool {
+    fn check_only(&mut self, groups: [[usize; 9]; 9]) -> Result<bool> {
         let mut modified = false;
         for group in groups {
             // 同一行/列/块中，将所有数字相同位的拼到一起，表示每个数在每个格子上的可能性
@@ -113,29 +132,48 @@ impl Sudoku {
                     }
 
                     tracing::debug!("Group:{group:?} [{}] -> [{}]", group[guy], check_seq + 1);
-                    self.input(group[guy], check_seq as u16 + 1);
+                    self.input(group[guy], check_seq as u16 + 1)?;
                     modified = true;
                 }
             }
         }
-        modified
+        Ok(modified)
     }
 
-    // 内部方法：更新相邻单元格使用
-    fn update(&mut self, i: usize, num: u16) {
+    // 内部方法：排除相邻单元格
+    fn exclude(&mut self, i: usize, num: u16) -> Result<()> {
         // 填充过的不用更新
         if self[i] > ALL_CONDITION {
-            return;
+            return Ok(());
         }
 
         // 排除相邻单元格的此数字可能性
         self[i] &= !(1 << (num - 1));
 
+        if self[i] == 0 {
+            Err(SudokuUnsolvable.into())
+        } else {
+            Ok(())
+        }
+    }
+
+    // 内部方法：更新相邻单元格
+    fn update(&mut self, i: usize) -> Result<()> {
+        // 填充过的不用更新
+        if self[i] > ALL_CONDITION {
+            return Ok(());
+        }
+
         // 只剩下一个可能的值时，填充此值
         if let Ok(j) = ONE_NUM.binary_search(&self[i]) {
-            tracing::debug!("Only one possibility: [{}] -> [{}]", i, j + 1);
-            self.input(i, j as u16 + 1);
+            self.input(i, j as u16 + 1)?;
         }
+
+        Ok(())
+    }
+
+    fn finished(&self) -> bool {
+        !self.iter().any(|cell| *cell <= ALL_CONDITION)
     }
 }
 
@@ -143,7 +181,7 @@ impl Sudoku {
 pub async fn resolve(req: Speedy<[u16; 81]>) -> Result<Speedy<[u16; 81]>> {
     let mut sudoku = Sudoku::default();
     // 按照入参初始化数独，不过初始化的过程中发现唯一可能的时候，也会直接填充
-    for (i, &n) in req.0.iter().enumerate() {
+    for (i, &n) in req.iter().enumerate() {
         // 没有值
         if n == 0 {
             continue;
@@ -155,21 +193,32 @@ pub async fn resolve(req: Speedy<[u16; 81]>) -> Result<Speedy<[u16; 81]>> {
         }
 
         // 一个个填进去
-        sudoku.input(i, n);
+        sudoku.input(i, n)?;
     }
 
-    // 开始检查每一组里面的某个数字的唯一性
-    let mut modified = true;
-    while modified {
-        modified = sudoku.check_only(rows())
-            || sudoku.check_only(columns())
-            || sudoku.check_only(blocks());
+    if !sudoku.finished() {
+        // 开始检查每一组里面的某个数字的唯一性
+        let mut modified = true;
+        while modified {
+            modified = sudoku.check_only(rows())?
+                || sudoku.check_only(columns())?
+                || sudoku.check_only(blocks())?;
+        }
     }
 
-    // 找不到唯一可能性的格子了，接下来开始枚举？
-    tracing::info!("{sudoku}");
+    if sudoku.finished() {
+        return Ok(Speedy(sudoku.0.map(|a| a >> 9)));
+    }
 
-    Ok(Speedy(sudoku.0.map(|a| a >> 9)))
+    info!("找不到唯一可能性的格子了，接下来开始枚举");
+    match traversal::resolve(sudoku) {
+        None => Err(SudokuUnsolvable.into()),
+        Some(sudoku) => {
+            tracing::info!("{sudoku}");
+            Ok(Speedy(sudoku.0.map(|a| a >> 9)))
+            // Ok(Speedy(sudoku.0))
+        }
+    }
 }
 
 const fn rows() -> [[usize; 9]; 9] {
@@ -217,7 +266,7 @@ const fn blocks() -> [[usize; 9]; 9] {
 #[cfg(test)]
 mod test {
     use async_std::task::block_on;
-    use poem::{post, test::TestClient, Route};
+    use poem::{post, test::TestClient, Result, Route};
     use speedy::Endianness::LittleEndian;
     use speedy::{Readable, Writable};
 
@@ -263,6 +312,19 @@ mod test {
     ];
 
     #[rustfmt::skip]
+    const SUDOKU_3_ERR: [u16; 81] = [
+        9, 1, 6, 0, 0, 4, 0, 7, 2,
+        8, 0, 0, 6, 2, 0, 0, 5, 4,
+        5, 0, 0, 7, 0, 8, 9, 3, 0,
+        0, 6, 0, 0, 0, 5, 2, 0, 0,
+        0, 4, 9, 2, 0, 7, 3, 0, 0,
+        2, 0, 5, 0, 6, 0, 7, 9, 8,
+        0, 9, 7, 8, 0, 0, 5, 0, 3,
+        0, 8, 0, 0, 7, 6, 0, 2, 9,
+        4, 5, 2, 1, 9, 6, 6, 8, 7,
+    ];
+
+    #[rustfmt::skip]
     const SUDOKU_4: [u16; 81] = [
         0, 6, 2, 0, 8, 0, 5, 0, 4,
         0, 0, 8, 0, 5, 0, 0, 9, 0,
@@ -275,7 +337,35 @@ mod test {
         8, 0, 3, 0, 9, 0, 2, 4, 0,
     ];
 
-    fn solve_raw(source: [u16; 81]) {
+    #[rustfmt::skip]
+    const SUDOKU_5: [u16; 81] = [
+        3, 0, 0, 0, 0, 0, 0, 5, 0,
+        0, 0, 0, 0, 9, 0, 3, 0, 0,
+        0, 9, 0, 0, 8, 6, 0, 0, 0,
+        0, 0, 0, 0, 6, 7, 0, 8, 1,
+        0, 0, 4, 0, 0, 0, 9, 0, 0,
+        0, 7, 0, 0, 0, 0, 5, 0, 6,
+        0, 8, 3, 0, 0, 2, 0, 0, 7,
+        4, 0, 0, 0, 0, 3, 0, 0, 0,
+        0, 0, 0, 6, 5, 0, 8, 4, 0,
+    ];
+
+    fn print_sudoku(sudoku: [u16; 81]) {
+        for i in 0..9 {
+            if i == 3 || i == 6 {
+                println!("------|-------|------");
+            }
+            for j in 0..8 {
+                if j == 3 || j == 6 {
+                    print!("| ");
+                }
+                print!("{} ", sudoku[i * 9 + j] >> 9);
+            }
+            println!("{}", sudoku[i * 9 + 8] >> 9);
+        }
+    }
+
+    fn solve_raw(source: [u16; 81]) -> Result<()> {
         let mut sudoku = Sudoku::default();
         // 按照入参初始化数独，不过初始化的过程中发现唯一可能的时候，也会直接填充
         for (i, &n) in source.iter().enumerate() {
@@ -285,26 +375,27 @@ mod test {
             }
 
             // 一个个填进去
-            sudoku.input(i, n);
+            sudoku.input(i, n)?;
         }
         println!("{sudoku}");
 
         // 开始检查每一组里面的某个数字的唯一性
         let mut modified = true;
         while modified {
-            modified = sudoku.check_only(rows())
-                || sudoku.check_only(columns())
-                || sudoku.check_only(blocks());
+            modified = sudoku.check_only(rows())?
+                || sudoku.check_only(columns())?
+                || sudoku.check_only(blocks())?;
         }
 
-        println!("{sudoku}");
+        Ok(())
     }
     #[test]
     fn solve_local() {
-        solve_raw(SUDOKU_1);
-        solve_raw(SUDOKU_2);
-        solve_raw(SUDOKU_3);
-        solve_raw(SUDOKU_4);
+        assert!(solve_raw(SUDOKU_1).is_ok());
+        assert!(solve_raw(SUDOKU_2).is_ok());
+        assert!(solve_raw(SUDOKU_3).is_ok());
+        assert!(solve_raw(SUDOKU_3_ERR).is_err());
+        assert!(solve_raw(SUDOKU_4).is_ok());
     }
 
     #[test]
@@ -312,17 +403,27 @@ mod test {
         let app = Route::new().at("/", post(resolve));
         let cli = TestClient::new(app);
         block_on(async {
-            let body = SUDOKU_1.write_to_vec_with_ctx(LittleEndian).unwrap();
+            // let body = SUDOKU_3_ERR.write_to_vec_with_ctx(LittleEndian).unwrap();
+            let body = SUDOKU_5.write_to_vec_with_ctx(LittleEndian).unwrap();
             let resp = cli
                 .post("/")
                 .content_type("application/octet-stream")
                 .body(body)
                 .send()
                 .await;
-            resp.assert_status_is_ok();
-            let body = resp.0.into_body().into_vec().await.unwrap();
-            let sudoku = Sudoku::read_from_buffer_with_ctx(LittleEndian, &body).unwrap();
-            println!("{sudoku}");
+
+            println!("{:#?}", resp.0);
+
+            if resp.0.status().is_success() {
+                let body = resp.0.into_body().into_vec().await.unwrap();
+                type Res = [u16; 81];
+                let sudoku = Res::read_from_buffer_with_ctx(LittleEndian, &body).unwrap();
+                print_sudoku(sudoku);
+            } else {
+                let body = resp.0.into_body().into_vec().await.unwrap();
+                let res = String::from_utf8_lossy(&body);
+                println!("{res}");
+            }
         })
     }
 }
