@@ -4,7 +4,7 @@ use tracing::{error, info};
 use toy_schema::sign::SignReq;
 
 use crate::service::http;
-use crate::ui::sign::{AlertMsg, AlertType, ALERT_MSG, AUTHENTICATED};
+use crate::ui::{AlertMsg, AlertType, ALERT_MSG, AUTHENTICATED};
 
 pub async fn sign_up(req: SignReq) {
     if let Err(e) = http::<SignReq, ()>(Method::POST, "/api/sign_up", Some(&req)).await {

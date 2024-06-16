@@ -2,7 +2,7 @@ use reqwest::Method;
 use tracing::{error, info};
 
 use crate::service::http;
-use crate::ui::config::SETTINGS_BTN_DISABLE;
+use crate::ui::SETTINGS_BTN_DISABLE;
 
 pub async fn reload() {
     if let Err(e) = http::<(), ()>(Method::POST, "/api/reload", None).await {

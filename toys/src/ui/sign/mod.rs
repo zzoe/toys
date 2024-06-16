@@ -24,8 +24,8 @@ impl AlertMsg {
 }
 
 pub enum AlertType {
-    Info,
-    Warn,
+    // Info,
+    // Warn,
     Error,
 }
 

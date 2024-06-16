@@ -7,9 +7,9 @@ use speedy::{LittleEndian, Readable, Writable};
 
 use toy_schema::sign::SignReq;
 
-use crate::error::Error::ResponseError;
+use crate::error::Error::Response;
 use crate::error::{Error, Result};
-use crate::ui::sign::AUTHENTICATED;
+use crate::ui::AUTHENTICATED;
 
 pub static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
 pub static HTTP_URL: OnceLock<Url> = OnceLock::new();
@@ -51,7 +51,7 @@ pub async fn http<'a, Req: Writable<LittleEndian>, Res: Readable<'a, LittleEndia
     // 发送请求
     let res = match request {
         Some(req) => {
-            let body = req.write_to_vec().map_err(Error::ParseError)?;
+            let body = req.write_to_vec().map_err(Error::Parse)?;
             client
                 .request(method, url)
                 .header("content-type", "application/octet-stream")
@@ -70,7 +70,7 @@ pub async fn http<'a, Req: Writable<LittleEndian>, Res: Readable<'a, LittleEndia
             *AUTHENTICATED.write() = false;
         }
 
-        return Err(ResponseError { status });
+        return Err(Response { status });
     }
 
     Ok(msg)
