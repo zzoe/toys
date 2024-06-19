@@ -59,6 +59,26 @@ pub fn Menu() -> Element {
                                     "数独"
                                 }
                             }
+                            li {
+                                Link { class: "flex flex-row rounded-lg px-4 py-2 text-sm text-nowrap font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700",
+                                    onclick: move|_| breadcrumbs.set(vec!["游戏".into(), "斗地主".into()].into()),
+                                    to: Route::FightTheLandlord {},
+                                    svg {
+                                        "viewBox": "0 0 24 24",
+                                        "xmlns": "http://www.w3.org/2000/svg",
+                                        "stroke": "currentColor",
+                                        "fill": "none",
+                                        width: "24",
+                                        "stroke-linejoin": "round",
+                                        "stroke-linecap": "round",
+                                        height: "24",
+                                        "stroke-width": "2",
+                                        path { "d": "M5 9c-1.5 1.5-3 3.2-3 5.5A5.5 5.5 0 0 0 7.5 20c1.8 0 3-.5 4.5-2 1.5 1.5 2.7 2 4.5 2a5.5 5.5 0 0 0 5.5-5.5c0-2.3-1.5-4-3-5.5l-7-7-7 7Z" }
+                                        path { "d": "M12 18v4" }
+                                    },
+                                    "斗地主"
+                                }
+                            }
                         }
                     }
                 }
