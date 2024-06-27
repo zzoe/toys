@@ -10,6 +10,7 @@ edition = "2021"
 bytes = { version = "*" }
 dioxus-router = { version = "*" }
 futures-util = { version = "*" }
+poker = { git = "https://gitee.com/zzoe/poker.git", branch = "master" }
 reqwest = { version = "*", features = ["cookies"] }
 speedy = { version = "*" }
 strum = { version = "*", features = ["derive"] }

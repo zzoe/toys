@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 
 use super::config::Settings;
-use super::fight_the_landlord::FightTheLandlord;
+use super::fight_the_landlord::{FTLInit, FightTheLandlord};
 use super::header::{Breadcrumbs, Header};
 use super::home::Home;
 use super::menu::{Menu, MenuHidden};
@@ -20,8 +20,12 @@ pub enum Route {
     Home {},
     #[route("/sudoku")]
     Sudoku {},
-    #[route("/fight_the_landlord")]
-    FightTheLandlord {},
+    #[nest("/fight_the_landlord")]
+      #[layout(FightTheLandlord)]
+      #[route("/")]
+      FTLInit {},
+      #[end_layout]
+    #[end_nest]
     #[route("/proofreading")]
     Proofreading {},
     #[route("/settings")]

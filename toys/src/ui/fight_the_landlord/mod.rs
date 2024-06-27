@@ -1,21 +1,32 @@
 use dioxus::prelude::*;
+use dioxus_router::prelude::*;
+use poker::{Hand, DECK_OF_CARDS};
+
+use crate::ui::Route;
+
+pub use game_init::FTLInit;
+
+mod card;
+mod game_init;
+mod game_play;
+
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
+struct RemainHand(Hand);
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
+struct OurHand(Hand);
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum PlayerRole {
+    LastFarmer,
+    Landlord,
+    NextFarmer,
+}
 
 #[component]
 pub fn FightTheLandlord() -> Element {
-    rsx!(
-        div{ class:"flex flex-col",
-            div{ class:"flex flex-row gap-3",
-                select { class: "select select-sm w-full max-w-xs",
-                    option { selected: "true", "AI辅助" }
-                }
-                button{ class:"btn",
-                    "初始化"
-                }
-                button{ class:"btn",
-                    "开始"
-                }
-            }
+    use_context_provider(|| Signal::new(RemainHand(DECK_OF_CARDS)));
+    use_context_provider(|| Signal::new(OurHand(Hand::default())));
+    use_context_provider(|| Signal::new(PlayerRole::NextFarmer));
 
-        }
-    )
+    rsx!(Outlet::<Route> {})
 }
