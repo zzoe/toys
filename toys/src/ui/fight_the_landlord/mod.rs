@@ -5,6 +5,7 @@ use poker::{Hand, DECK_OF_CARDS};
 use crate::ui::Route;
 
 pub use game_init::FTLInit;
+pub use game_play::FTLPlay;
 
 mod card;
 mod game_init;

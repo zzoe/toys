@@ -1,8 +1,10 @@
 use dioxus::prelude::*;
+use dioxus_router::prelude::*;
 use poker::{Card, Hand, SuitCard, DECK_OF_CARDS};
 
 use crate::ui::fight_the_landlord::card::CardUI;
 use crate::ui::fight_the_landlord::{OurHand, PlayerRole, RemainHand};
+use crate::ui::Route;
 
 // 当前操作对象
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -15,6 +17,7 @@ enum OperatingObject {
 
 #[component]
 pub fn FTLInit() -> Element {
+    let nav = navigator();
     let mut remain_hand = use_context::<Signal<RemainHand>>();
     let mut our_hand = use_context::<Signal<OurHand>>();
     let mut player_role = use_context::<Signal<PlayerRole>>();
@@ -67,7 +70,7 @@ pub fn FTLInit() -> Element {
         let key = format!("r{}", u64::from(suit_card));
         rsx!(
             div{ class: if suit_card == SuitCard::Spades(Card::Two) {"row-start-1"} else {""},
-                key: "{key}",
+                key: "remain-{key}",
                 CardUI {
                     suit_card,
                     containing: remain_hand.read().0.contains(suit_card),
@@ -80,7 +83,7 @@ pub fn FTLInit() -> Element {
     let landlord_cards = landlord_hand.read().map(|suit_card: SuitCard| {
         let key = format!("l{}", u64::from(suit_card));
         rsx!(CardUI {
-            key: "{key}",
+            key: "landlord-{key}",
             suit_card,
             containing: true,
             on_click: put_back(suit_card),
@@ -90,7 +93,7 @@ pub fn FTLInit() -> Element {
     let our_cards = our_hand.read().0.map(|suit_card: SuitCard| {
         let key = format!("o{}", u64::from(suit_card));
         rsx!(CardUI {
-            key: "{key}",
+            key: "our-{key}",
             suit_card,
             containing: true,
             on_click: put_back(suit_card),
@@ -152,7 +155,8 @@ pub fn FTLInit() -> Element {
                 label { class: "label min-w-32",
                     span{ class: "label-text", "选择底牌："}
                 }
-                div{ class: "flex flex-wrap shadow grow-0 min-w-44 w-fit h-full pr-2 pb-2 justify-center rounded-xl outline-none {landlord_hand_outline} hover:outline-blue-400 bg-blue-100",
+                div{ class: "flex flex-wrap shadow grow-0 min-w-44 w-fit h-full pr-2 pb-2 justify-center rounded-xl
+                outline-none {landlord_hand_outline} hover:outline-blue-400 bg-blue-100",
                     {landlord_cards},
                 }
             }
@@ -161,8 +165,16 @@ pub fn FTLInit() -> Element {
                 label { class: "label min-w-32",
                     span{ class: "label-text", "选择自己的手牌："}
                 }
-                div{ class: "flex flex-wrap shadow grow-0 w-full max-w-222 h-full pr-2 pb-2 justify-center rounded-xl outline-none {our_hand_outline} hover:outline-blue-400 bg-blue-100",
+                div{ class: "flex flex-wrap shadow grow-0 w-full max-w-222 h-full pr-2 pb-2 justify-center rounded-xl
+                outline-none {our_hand_outline} hover:outline-blue-400 bg-blue-100",
                     {our_cards},
+                }
+            }
+            div{ class: "flex flex-row justify-evenly",
+                button{class:"btn btn-wide btn-outline btn-secondary", "重置"}
+                button{class:"btn btn-wide btn-outline btn-primary",
+                    onclick: move|_| {nav.push(Route::FTLPlay{});},
+                    "开始"
                 }
             }
         }

@@ -1,5 +1,6 @@
+use crate::ui::fight_the_landlord::RemainHand;
 use dioxus::prelude::*;
-use poker::{Card, SuitCard};
+use poker::{Card, SuitCard, DECK_OF_CARDS};
 
 // Remember: Owned props must implement `PartialEq`!
 #[derive(Clone, PartialEq, Props)]
@@ -49,4 +50,34 @@ pub fn CardUI(props: CardProps) -> Element {
             "{card}"
         }
     }
+}
+
+#[derive(Clone, PartialEq, Props)]
+pub struct RemainHandProps {
+    pub card_handler: fn(suit_card: SuitCard) -> EventHandler<MouseEvent>,
+}
+
+#[component]
+pub fn RemainHandUI(props: RemainHandProps) -> Element {
+    let remain_hand = use_context::<Signal<RemainHand>>();
+
+    let remain_cards = DECK_OF_CARDS.map(|suit_card| {
+        let key = format!("r{}", u64::from(suit_card));
+        rsx!(
+            div{ class: if suit_card == SuitCard::Spades(Card::Two) {"row-start-1"} else {""},
+                key: "remain-{key}",
+                CardUI {
+                    suit_card,
+                    containing: remain_hand.read().0.contains(suit_card),
+                    on_click: (props.card_handler)(suit_card),
+                }
+            }
+        )
+    });
+
+    rsx!(
+        div{ class:"grid grid-flow-col grid-rows-4 grid-cols-14 w-fit bg-blue-100 pr-2 pb-2",
+            {remain_cards},
+        }
+    )
 }
