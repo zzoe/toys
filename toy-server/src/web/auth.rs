@@ -1,6 +1,6 @@
 use poem::session::Session;
 use poem::{handler, Endpoint, Middleware, Request};
-use surrealdb::opt::auth::{Jwt, Scope};
+use surrealdb::opt::auth::{Jwt, Record};
 use tracing::{debug, error, info, warn};
 
 use toy_schema::sign::SignReq;
@@ -17,17 +17,17 @@ pub async fn sign_up(sign_req: Speedy<SignReq>, session: &Session) -> poem::Resu
     }
 
     let db = database::connect().await.map_err(Error::DbException)?;
-    let credentials = Scope {
+    let credentials = Record {
         namespace: "toy",
         database: "toy",
-        scope: "user_scope",
+        access: "user_access",
         params: sign_req.0,
     };
 
-    let token: Jwt = db
-        .signup(credentials)
-        .await
-        .map_err(|_| Error::SignUpFail)?;
+    let token: Jwt = db.signup(credentials).await.map_err(|e| {
+        error!("sign_up error: {e}");
+        Error::SignUpFail
+    })?;
 
     session.set("token", token);
 
@@ -36,23 +36,23 @@ pub async fn sign_up(sign_req: Speedy<SignReq>, session: &Session) -> poem::Resu
 
 #[handler]
 pub async fn sign_in(sign_req: Speedy<SignReq>, session: &Session) -> poem::Result<Speedy<()>> {
-    debug!("sign_in session: {session:#?}");
+    info!("sign_in session: {session:#?}");
     if session.get::<Jwt>("token").is_some() {
         session.renew();
     }
 
     let db = database::connect().await.map_err(Error::DbException)?;
-    let credentials = Scope {
+    let credentials = Record {
         namespace: "toy",
         database: "toy",
-        scope: "user_scope",
+        access: "user_access",
         params: sign_req.0,
     };
 
-    let token: Jwt = db
-        .signin(credentials)
-        .await
-        .map_err(|_| Error::SignInFail)?;
+    let token: Jwt = db.signin(credentials).await.map_err(|e| {
+        error!("sign_in error: {e}");
+        Error::SignInFail
+    })?;
 
     session.set("token", token);
 
@@ -61,7 +61,7 @@ pub async fn sign_in(sign_req: Speedy<SignReq>, session: &Session) -> poem::Resu
 
 #[handler]
 pub async fn sign_check(session: &Session) -> poem::Result<Speedy<bool>> {
-    debug!("sign_check session: {session:#?}");
+    info!("sign_check session: {session:#?}");
     let Some(token) = session.get::<Jwt>("token") else {
         warn!("session已失效，未获取到数据库token");
         session.purge();
@@ -118,7 +118,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
 
         // 从session取token
         let Some(token) = session.get::<Jwt>("token") else {
-            error!("session中未读取到token");
+            error!("session中未读取到token: {session:#?}");
             return Err(Error::UnAuthenticated.into());
         };
 

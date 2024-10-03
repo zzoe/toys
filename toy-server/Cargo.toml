@@ -17,7 +17,7 @@ poem = { version = "*", features = ["anyhow", "compression", "session", "static-
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*" }
 speedy = { version = "*" }
-surrealdb = { version = "*", features = ["kv-rocksdb"] }
+surrealdb = { version = "*", features = ["kv-surrealkv"] }
 thiserror = { version = "*" }
 time = { version = "*" }
 toy-schema = { path = "../toy-schema" }

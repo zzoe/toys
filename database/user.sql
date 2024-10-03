@@ -3,7 +3,8 @@ DEFINE FIELD name ON user TYPE string;
 DEFINE FIELD email ON user TYPE string ASSERT string::is::email($value);
 DEFINE FIELD password ON user TYPE string;
 DEFINE INDEX email ON user FIELDS email UNIQUE;
-DEFINE SCOPE user_scope SESSION 10h
+
+DEFINE ACCESS user_access ON DATABASE TYPE RECORD
     SIGNUP (
         CREATE user CONTENT {
             name: $name,
@@ -11,4 +12,5 @@ DEFINE SCOPE user_scope SESSION 10h
             password: crypto::argon2::generate($password)
         }
     )
-    SIGNIN ( SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) );
+    SIGNIN ( SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) )
+    DURATION FOR SESSION 10h;

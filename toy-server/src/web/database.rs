@@ -8,9 +8,9 @@ pub(crate) const ROOT_CREDENTIALS: Root = Root {
 };
 
 pub(crate) async fn connect() -> Result<Surreal<Client>, surrealdb::Error> {
-    let db: Surreal<Client> = Surreal::init();
-    db.connect::<Ws>("127.0.0.1:8000").await?;
-
+    // let db: Surreal<Client> = Surreal::init();
+    // db.connect::<Ws>("ws://localhost:8000").await?;
+    let db = Surreal::new::<Ws>("localhost:8000").await?;
     db.use_ns("toy").use_db("toy").await?;
 
     Ok(db)
@@ -45,12 +45,17 @@ mod test {
         }
         println!("3");
 
-        let entries: BTreeMap<String, Value> = match db
-            .select(("session", "9ncx3SiLjSVPq2T2s1niQlg6JiChCRVoG3iEIJ4kCVI"))
+        const SESSION_ID: &str = "9ncx3SiLjSVPq2T2s1niQlg6JiChCRVoG3iEIJ4kCVI";
+
+        let entries = match db
+            // .select(("session", "9ncx3SiLjSVPq2T2s1niQlg6JiChCRVoG3iEIJ4kCVI"))
+            .query("select * omit id from session where id = $id")
+            .bind(("id", SESSION_ID))
             .await
+            .and_then(|mut res| res.take(0))
         {
             Ok(Some::<BTreeMap<String, Value>>(mut e)) => {
-                e.remove("id");
+                // e.remove("id");
                 e
             }
             Ok(None) => {
@@ -64,10 +69,7 @@ mod test {
         println!("load session: {entries:#?}");
 
         if let Err(e) = db
-            .update::<Option<BTreeMap<String, Value>>>((
-                "session",
-                "9ncx3SiLjSVPq2T2s1niQlg6JiChCRVoG3iEIJ4kCVI",
-            ))
+            .update::<Option<BTreeMap<String, Value>>>(("session", SESSION_ID))
             .content(entries)
             .await
         {
