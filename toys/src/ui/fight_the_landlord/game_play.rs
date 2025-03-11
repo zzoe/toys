@@ -47,11 +47,18 @@ pub fn FTLPlay() -> Element {
             }
         )
     });
-
     let previous_cards = previous_hand.read().map(|suit_card: SuitCard| {
         let key = format!("l{}", u64::from(suit_card));
         rsx!(CardUI {
             key: "previous-{key}",
+            suit_card,
+            containing: true,
+        })
+    });
+    let next_cards = next_hand.read().map(|suit_card: SuitCard| {
+        let key = format!("l{}", u64::from(suit_card));
+        rsx!(CardUI {
+            key: "next-{key}",
             suit_card,
             containing: true,
         })
@@ -93,6 +100,9 @@ pub fn FTLPlay() -> Element {
                 }
                 // 地主下家
                 div{ class:"grid grid-cols-6 w-fit min-h-16",
+                    div{ class: "flex flex-wrap shadow grow-0 min-w-44 w-fit h-full pr-2 pb-2 justify-center rounded-xl outline-none {next_hand_outline} hover:outline-blue-400 bg-blue-100",
+                        {next_cards},
+                    }
                 }
             }
         }
