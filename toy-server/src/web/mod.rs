@@ -3,6 +3,7 @@ use std::future::Future;
 use std::time::Duration;
 
 use arc_swap::access::Access;
+use log::info;
 use poem::endpoint::StaticFilesEndpoint;
 use poem::listener::{Listener, RustlsCertificate, RustlsConfig, TcpListener};
 use poem::middleware::{CatchPanic, Compression, NormalizePath, Tracing, TrailingSlash};
@@ -53,11 +54,11 @@ pub(crate) async fn start(signal: impl Future<Output = ()>) {
             ),
         ),
     )
-    .run_with_graceful_shutdown(route, signal, Some(Duration::from_secs(10)))
+    .run_with_graceful_shutdown(route, signal, Some(Duration::from_secs(30)))
     .await;
 
     if let Err(e) = res {
-        tracing::error!("服务异常: {}", e);
+        log::error!("服务异常: {}", e);
     }
 }
 

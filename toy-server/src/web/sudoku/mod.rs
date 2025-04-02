@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 
 use poem::{handler, Result};
 use speedy::{Readable, Writable};
-use tracing::info;
+use log::info;
 
 use crate::error::Error;
 use crate::error::Error::{SudokuNumErr, SudokuUnsolvable};
@@ -82,7 +82,7 @@ impl Sudoku {
 
         // 填充自身 0-8位代表每个数字1-9的可能性，第9位之上存储具体的值
         self[i] = (num << 9) | (1 << (num - 1));
-        tracing::debug!("第{}行第{}列，填充{num}", row + 1, col + 1);
+        log::debug!("第{}行第{}列，填充{num}", row + 1, col + 1);
 
         for j in 0..9 {
             // 排除同一行中的第j个
@@ -114,7 +114,7 @@ impl Sudoku {
             //依次汇总check_seq+1（1-9）在每个格子的可能性
             for (check_seq, group_check_num) in group_check.iter_mut().enumerate() {
                 for (group_seq, num_index) in group.iter().enumerate() {
-                    tracing::debug!(
+                    log::debug!(
                         "{check_seq} {group_seq} {:016b} {:016b}",
                         *group_check_num,
                         self[*num_index]
@@ -122,7 +122,7 @@ impl Sudoku {
                     // (1 << check_seq) & self[*num_index] 取出这格子中数字check_seq+1的可能性，然后根据格子的序号0-8放在group_check_num的0-8 bit 上
                     *group_check_num |=
                         ((1 << check_seq) & self[*num_index]) >> check_seq << group_seq;
-                    tracing::debug!("{check_seq} {group_seq} {:016b}", *group_check_num);
+                    log::debug!("{check_seq} {group_seq} {:016b}", *group_check_num);
                 }
                 // 这一组里面，数字j+1唯一可能的地方
                 if let Ok(guy) = ONE_NUM.binary_search(group_check_num) {
@@ -131,7 +131,7 @@ impl Sudoku {
                         continue;
                     }
 
-                    tracing::debug!("Group:{group:?} [{}] -> [{}]", group[guy], check_seq + 1);
+                    log::debug!("Group:{group:?} [{}] -> [{}]", group[guy], check_seq + 1);
                     self.input(group[guy], check_seq as u16 + 1)?;
                     modified = true;
                 }
@@ -214,7 +214,7 @@ pub async fn resolve(req: Speedy<[u16; 81]>) -> Result<Speedy<[u16; 81]>> {
     match traversal::resolve(sudoku) {
         None => Err(SudokuUnsolvable.into()),
         Some(sudoku) => {
-            tracing::info!("{sudoku}");
+            info!("{sudoku}");
             Ok(Speedy(sudoku.0.map(|a| a >> 9)))
             // Ok(Speedy(sudoku.0))
         }
@@ -265,7 +265,7 @@ const fn blocks() -> [[usize; 9]; 9] {
 
 #[cfg(test)]
 mod test {
-    use async_std::task::block_on;
+    use futures::executor::block_on;
     use poem::{post, test::TestClient, Result, Route};
     use speedy::Endianness::LittleEndian;
     use speedy::{Readable, Writable};

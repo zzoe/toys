@@ -19,7 +19,7 @@ pub(crate) fn reload() {
             Ok(c) => {
                 cfg.store(Arc::new(c));
             }
-            Err(e) => tracing::error!("{file} 配置格式有误，解析失败: {e}"),
+            Err(e) => log::error!("{file} 配置格式有误，解析失败: {e}"),
         },
         Err(e) => {
             if e.kind() == NotFound {
@@ -27,7 +27,7 @@ pub(crate) fn reload() {
                     fs::write(file, c).ok();
                 }
             } else {
-                tracing::error!("{file} 配置读取失败: {e}");
+                log::error!("{file} 配置读取失败: {e}");
             }
         }
     }
@@ -37,20 +37,19 @@ pub(crate) fn reload() {
 pub(crate) struct Config {
     pub(crate) log: LogCfg,
     pub(crate) web: WebCfg,
+    pub(crate) trace: TraceCfg,
 }
 
 #[derive(Deserialize, Serialize)]
 pub(crate) struct LogCfg {
     pub(crate) directory: String,
-    pub(crate) file_name: String,
     pub(crate) level: String,
 }
 
 impl Default for LogCfg {
     fn default() -> Self {
         LogCfg {
-            directory: "./logs".to_owned(),
-            file_name: "log".to_owned(),
+            directory: "../logs".to_owned(),
             level: "INFO".to_owned(),
         }
     }
@@ -66,6 +65,21 @@ impl Default for WebCfg {
     fn default() -> Self {
         WebCfg {
             address: "0.0.0.0:8080".to_owned(),
+            assets_path: "../dist".to_owned(),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub(crate) struct TraceCfg {
+    pub(crate) authorization: String,
+    pub(crate) assets_path: String,
+}
+
+impl Default for TraceCfg {
+    fn default() -> Self {
+        TraceCfg {
+            authorization: "0.0.0.0:8080".to_owned(),
             assets_path: "./dist".to_owned(),
         }
     }

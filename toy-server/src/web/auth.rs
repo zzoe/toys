@@ -1,7 +1,7 @@
 use poem::session::Session;
 use poem::{handler, Endpoint, Middleware, Request};
 use surrealdb::opt::auth::{Jwt, Record};
-use tracing::{debug, error, info, warn};
+use log::{debug, error, info, warn};
 
 use toy_schema::sign::SignReq;
 

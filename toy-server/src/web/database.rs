@@ -19,8 +19,7 @@ pub(crate) async fn connect() -> Result<Surreal<Client>, surrealdb::Error> {
 #[cfg(test)]
 mod test {
     use std::collections::BTreeMap;
-
-    use async_std::task::block_on;
+    use futures::executor::block_on;
     use serde_json::Value;
 
     use crate::web::database::{connect, ROOT_CREDENTIALS};
@@ -54,7 +53,7 @@ mod test {
             .await
             .and_then(|mut res| res.take(0))
         {
-            Ok(Some::<BTreeMap<String, Value>>(mut e)) => {
+            Ok(Some::<BTreeMap<String, Value>>(e)) => {
                 // e.remove("id");
                 e
             }

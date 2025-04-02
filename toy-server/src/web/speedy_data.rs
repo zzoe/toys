@@ -4,7 +4,7 @@ use std::ops::{Deref, DerefMut};
 use poem::http::{header, StatusCode};
 use poem::{FromRequest, IntoResponse, Request, RequestBody, Response, Result};
 use speedy::{Endianness, Readable, Writable};
-use tracing::info;
+use log::info;
 
 use crate::error::Error;
 

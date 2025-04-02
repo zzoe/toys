@@ -1,6 +1,6 @@
 use poem::error::ResponseError;
 use poem::http::StatusCode;
-use tracing::error;
+use log::error;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

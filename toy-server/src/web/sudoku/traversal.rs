@@ -1,5 +1,5 @@
 use indextree::{Arena, NodeId};
-use tracing::info;
+use log::info;
 
 use crate::web::sudoku::{Sudoku, ALL_CONDITION};
 
