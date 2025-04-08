@@ -47,7 +47,7 @@ pub fn FTLPlay() -> Element {
             }
         )
     });
-    let previous_cards = previous_hand.read().map(|suit_card: SuitCard| {
+    let previous_cards = previous_hand.read().into_iter().map(|suit_card: SuitCard| {
         let key = format!("l{}", u64::from(suit_card));
         rsx!(CardUI {
             key: "previous-{key}",
@@ -55,7 +55,7 @@ pub fn FTLPlay() -> Element {
             containing: true,
         })
     });
-    let next_cards = next_hand.read().map(|suit_card: SuitCard| {
+    let next_cards = next_hand.read().into_iter().map(|suit_card: SuitCard| {
         let key = format!("l{}", u64::from(suit_card));
         rsx!(CardUI {
             key: "next-{key}",

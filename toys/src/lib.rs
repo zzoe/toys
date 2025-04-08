@@ -12,20 +12,12 @@ mod ui;
 
 pub fn init() {
     const LOCAL_HOST: &str = "https://127.0.0.1:8080";
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        HTTP_CLIENT.get_or_init(|| ClientBuilder::new().cookie_store(true).build().unwrap());
-        HTTP_URL.get_or_init(|| Url::parse(LOCAL_HOST).unwrap());
-    }
 
-    #[cfg(target_arch = "wasm32")]
-    {
-        HTTP_CLIENT.get_or_init(|| ClientBuilder::new().build().unwrap());
-        let host = web_sys::window()
-            .and_then(|w| w.location().href().ok())
-            .unwrap_or(LOCAL_HOST.to_string());
-        HTTP_URL.get_or_init(|| Url::parse(&host).unwrap());
-    }
+    HTTP_CLIENT.get_or_init(|| ClientBuilder::new().build().unwrap());
+    let host = web_sys::window()
+        .and_then(|w| w.location().href().ok())
+        .unwrap_or(LOCAL_HOST.to_string());
+    HTTP_URL.get_or_init(|| Url::parse(&host).unwrap());
 }
 
 pub fn App() -> Element {

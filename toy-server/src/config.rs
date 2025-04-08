@@ -65,7 +65,7 @@ impl Default for WebCfg {
     fn default() -> Self {
         WebCfg {
             address: "0.0.0.0:8080".to_owned(),
-            assets_path: "../dist".to_owned(),
+            assets_path: "../dist/public".to_owned(),
         }
     }
 }

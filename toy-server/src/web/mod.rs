@@ -3,7 +3,6 @@ use std::future::Future;
 use std::time::Duration;
 
 use arc_swap::access::Access;
-use log::info;
 use poem::endpoint::StaticFilesEndpoint;
 use poem::listener::{Listener, RustlsCertificate, RustlsConfig, TcpListener};
 use poem::middleware::{CatchPanic, Compression, NormalizePath, Tracing, TrailingSlash};

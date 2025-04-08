@@ -1,16 +1,12 @@
 [application]
 
-# App (Project) Name
+# App name
 name = "toys"
 
-# Dioxus App Default Platform
-# desktop, web, mobile, ssr
-default_platform = "web"
-
-# `build` & `serve` dist path
+# `build` & `serve` output path
 out_dir = "../dist"
 
-# resource (public) file folder
+# The static resource path
 asset_dir = "public"
 
 [web.app]
@@ -20,23 +16,35 @@ title = "toys | ⛺"
 
 [web.watcher]
 
-# when watcher trigger, regenerate the `index.html`
+# When watcher is triggered, regenerate the `index.html`
 reload_html = true
 
-# which files or dirs will be watcher monitoring
+# Which files or dirs will be monitored
 watch_path = ["src", "public"]
 
-# include `assets` in web platform
+# Include style or script assets
 [web.resource]
 
 # CSS style file
-style = ["tailwind.css"]
+style = ["/./assets/tailwind.css"]
 
 # Javascript code file
 script = []
 
 [web.resource.dev]
 
-# Javascript code file
-# serve: [dev-server] only
+# Same as [web.resource], but for development servers
+
+# CSS style file
+style = []
+
+# JavaScript files
 script = []
+
+[[web.proxy]]
+backend = "https://localhost:8080/"
+
+[bundle]
+identifier = "com.dioxuslabs"
+publisher = "DioxusLabs"
+#icon = "assets/icon.png"

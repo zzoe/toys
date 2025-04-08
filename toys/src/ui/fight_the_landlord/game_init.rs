@@ -80,7 +80,7 @@ pub fn FTLInit() -> Element {
         )
     });
 
-    let landlord_cards = landlord_hand.read().map(|suit_card: SuitCard| {
+    let landlord_cards = landlord_hand.read().into_iter().map(|suit_card: SuitCard| {
         let key = format!("l{}", u64::from(suit_card));
         rsx!(CardUI {
             key: "landlord-{key}",
